@@ -26,8 +26,8 @@ def ingest_tia(limit=None):  # Add a limit parameter for testing
 
     batches = generate_batches(total_pages, batch_size, limit=limit)
     for batch_number, batch in enumerate(batches, start=1):
-        log_batch_initiation(supabase, batch_number)
-        process_batch(supabase, batch_number, batch)
+        log_batch_initiation(batch_number)
+        process_batch(batch_number, batch)
 
 
 def fetch_metadata(page):
@@ -79,18 +79,18 @@ def generate_batches(total_pages, batch_size, limit=None):
     return batches
 
 
-def process_batch(supabase, batch_number, batch):
+def process_batch(batch_number, batch):
     for page_number in batch:
         try:
             page_data = fetch_metadata(page_number)  # Use fetch_metadata directly
             posts = extract_relevant_data(page_data)
             if posts:
-                save_to_database(supabase, posts, batch_number, page_number)
-                log_status(supabase, batch_number, page_number, "done")
+                save_to_database(posts, batch_number, page_number)
+                log_status(batch_number, page_number, "done")
             else:
-                log_status(supabase, batch_number, page_number, "no posts")
+                log_status(batch_number, page_number, "no posts")
         except Exception as e:
-            log_status(supabase, batch_number, page_number, f"error: {str(e)}")
+            log_status(batch_number, page_number, f"error: {str(e)}")
 
 
 def extract_relevant_data(page_data):
@@ -103,20 +103,26 @@ def extract_relevant_data(page_data):
             "modified_gmt": post["modified_gmt"],
             "link": post["link"],
             "status": post["status"],
+            "excerpt": post.get("excerpt", ""),
+            "author_id": post["author"]["id"],
+            "author_first_name": post["author"]["first_name"],
+            "author_last_name": post["author"]["last_name"],
+            "editor": post.get("editor", ""),
+            "comments_count": post.get("comments_count", 0),
         }
         for post in page_data["posts"]
     ]
 
 
-def save_to_database(supabase, posts, batch_number, page_number):
+def save_to_database(posts, batch_number, page_number):
     data = [
         {"batch_number": batch_number, "page_number": page_number, **post}
         for post in posts
     ]
-    upsert_data(supabase, TABLE_POSTS, data)
+    upsert_data(TABLE_POSTS, data)
 
 
-def retry_processing(supabase):
+def retry_processing():
     # Fetch all pages that are not marked as 'done'
     not_done_pages = (
         supabase.table(TABLE_PAGE_STATUS).select("*").neq("status", "done").execute()
@@ -132,16 +138,16 @@ def retry_processing(supabase):
 
     # Process each batch
     for batch_number, pages in batches_to_process.items():
-        process_batch(supabase, batch_number, pages)
+        process_batch(batch_number, pages)
 
 
-def log_batch_initiation(supabase, batch_number):
+def log_batch_initiation(batch_number):
     supabase.table(TABLE_BATCH_LOG).insert(
         {"batch_number": batch_number, "status": "started"}
     ).execute()
 
 
-def log_status(supabase, batch_number, page_number, status):
+def log_status(batch_number, page_number, status):
     supabase.table(TABLE_PAGE_STATUS).upsert(
         {"batch_number": batch_number, "page_number": page_number, "status": status}
     ).execute()

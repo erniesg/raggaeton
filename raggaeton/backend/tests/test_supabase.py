@@ -19,47 +19,38 @@ def setup_supabase():
     return supabase
 
 
-def test_insert_and_fetch_data(setup_supabase):
+def test_insert_and_fetch_data():
     # Insert data
-    insert_data(
-        setup_supabase, test_table, {"title": "Test Post", "content": "This is a test"}
-    )
+    insert_data(test_table, {"title": "Test Post", "content": "This is a test"})
 
     # Fetch data
-    fetched_data = fetch_data(
-        setup_supabase, test_table, filters=[("eq", "title", "Test Post")]
-    )
+    fetched_data = fetch_data(test_table, filters=[("eq", "title", "Test Post")])
     assert len(fetched_data) == 1, "Data was not inserted or fetched properly."
     assert (
         fetched_data[0]["content"] == "This is a test"
     ), "Fetched content does not match inserted content."
 
     # Cleanup
-    delete_data(setup_supabase, test_table, {"title": "Test Post"})
+    delete_data(test_table, {"title": "Test Post"})
 
 
-def test_update_data(setup_supabase):
+def test_update_data():
     # Setup
-    insert_data(
-        setup_supabase, test_table, {"title": "Update Test", "content": "Before update"}
-    )
+    insert_data(test_table, {"title": "Update Test", "content": "Before update"})
 
     # Update data
     update_data(
-        setup_supabase,
         test_table,
         {"title": "Update Test"},
         {"content": "After update"},
     )
 
     # Verify update
-    updated_data = fetch_data(
-        setup_supabase, test_table, filters=[("eq", "title", "Update Test")]
-    )
+    updated_data = fetch_data(test_table, filters=[("eq", "title", "Update Test")])
     assert len(updated_data) == 1, "Data was not updated or fetched properly."
     assert (
         updated_data[0]["content"] == "After update"
     ), "Updated content does not match expected content."
 
     # Cleanup
-    delete_data(setup_supabase, test_table, {"title": "Update Test"})
+    delete_data(test_table, {"title": "Update Test"})

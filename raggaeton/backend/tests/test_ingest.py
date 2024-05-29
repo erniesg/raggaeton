@@ -1,6 +1,6 @@
 import unittest
 import logging
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, call
 from raggaeton.backend.src.api.endpoints.ingest import (
     fetch_metadata,
     generate_batches,
@@ -56,22 +56,29 @@ class TestIngestionProcess(unittest.TestCase):
                     "id": "842575",
                     "title": "Sample Post",
                     "content": "Content",
-                    "date_gmt": "2023-01-01T00:00:00:00",
+                    "date_gmt": "2023-01-01T00:00:00",
                     "modified_gmt": "2023-01-01T00:00:00",
                     "link": "http://example.com",
                     "status": "published",
+                    "excerpt": "Sample excerpt",
+                    "author": {
+                        "id": "123",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                    },
+                    "editor": "Editor Name",
+                    "comments_count": 5,
                 }
             ]
         }
         mock_save_to_database.return_value = None
         mock_log_status.return_value = None
 
-        supabase = MagicMock()  # Mock the Supabase client
         batch_number = 1
         batch = [1, 2, 3]  # Example batch of 3 pages
 
         # Execute the function
-        process_batch(supabase, batch_number, batch)
+        process_batch(batch_number, batch)
 
         # Assertions to check if fetch_page_data was called correctly
         self.assertEqual(mock_fetch_metadata.call_count, 3)
@@ -87,9 +94,9 @@ class TestIngestionProcess(unittest.TestCase):
         self.assertEqual(mock_log_status.call_count, 3)
         mock_log_status.assert_has_calls(
             [
-                call(supabase, batch_number, 1, "done"),
-                call(supabase, batch_number, 2, "done"),
-                call(supabase, batch_number, 3, "done"),
+                call(batch_number, 1, "done"),
+                call(batch_number, 2, "done"),
+                call(batch_number, 3, "done"),
             ]
         )
 

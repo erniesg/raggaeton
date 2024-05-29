@@ -15,10 +15,9 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def insert_data(supabase, table_name, data):
+def insert_data(table_name, data):
     try:
         response = supabase.table(table_name).insert(data).execute()
-        logger.debug(f"Insert Success: {response}")
         return response.data
     except Exception as e:
         logger.error(
@@ -27,7 +26,7 @@ def insert_data(supabase, table_name, data):
         raise
 
 
-def fetch_data(supabase, table_name, select_columns="*", filters=None):
+def fetch_data(table_name, select_columns="*", filters=None):
     query = supabase.table(table_name).select(select_columns)
 
     if filters:
@@ -39,7 +38,7 @@ def fetch_data(supabase, table_name, select_columns="*", filters=None):
     return response.data
 
 
-def update_data(supabase, table_name, match_criteria, new_data):
+def update_data(table_name, match_criteria, new_data):
     query = supabase.table(table_name).update(new_data)
     for key, value in match_criteria.items():
         query = query.eq(key, value)
@@ -47,7 +46,7 @@ def update_data(supabase, table_name, match_criteria, new_data):
     return response.data
 
 
-def delete_data(supabase, table_name, match_criteria):
+def delete_data(table_name, match_criteria):
     query = supabase.table(table_name).delete()
     for key, value in match_criteria.items():
         query = query.eq(key, value)
@@ -55,7 +54,6 @@ def delete_data(supabase, table_name, match_criteria):
     return response.data
 
 
-def upsert_data(supabase, table_name, data):
+def upsert_data(table_name, data):
     response = supabase.table(table_name).upsert(data).execute()
-    logger.debug(f"Upsert Success: {response}")
     return response.data
