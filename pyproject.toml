@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "raggaeton"
+version = "0.1.0"
+description = "RAG and chat over your documents"
+authors = ["Chen Enjiao <erniesg@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.32.2"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.7.1"
+pytest = "^8.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
