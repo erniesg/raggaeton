@@ -1,7 +1,5 @@
 import requests
-from raggaeton.backend.src.db.supabase import supabase_client
-
-supabase_client = supabase_client()
+from raggaeton.backend.src.db.supabase import supabase, upsert_data
 
 
 def ingest(source):
@@ -18,8 +16,8 @@ def ingest_tia():
 
     batches = generate_batches(total_pages, batch_size)
     for batch_number, batch in enumerate(batches, start=1):
-        log_batch_initiation(supabase_client, batch_number)
-        process_batch(supabase_client, batch_number, batch)
+        log_batch_initiation(supabase, batch_number)
+        process_batch(supabase, batch_number, batch)
 
 
 def fetch_metadata():
@@ -39,15 +37,18 @@ def generate_batches(total_pages, batch_size, limit=None):
     return batches
 
 
-def process_batch(supabase_client, batch_number, batch):
+def process_batch(supabase, batch_number, batch):
     for page_number in batch:
         try:
             page_data = fetch_page_data(page_number)
             posts = extract_relevant_data(page_data)
-            save_to_database(supabase_client, posts, batch_number, page_number)
-            log_status(supabase_client, batch_number, page_number, "done")
+            if posts:
+                save_to_database(supabase, posts, batch_number, page_number)
+                log_status(supabase, batch_number, page_number, "done")
+            else:
+                log_status(supabase, batch_number, page_number, "no posts")
         except Exception as e:
-            log_status(supabase_client, batch_number, page_number, f"error: {str(e)}")
+            log_status(supabase, batch_number, page_number, f"error: {str(e)}")
 
 
 def fetch_page_data(page):
@@ -72,15 +73,18 @@ def extract_relevant_data(page_data):
     ]
 
 
-def save_to_database(supabase_client, posts, batch_number, page_number):
-    # Implement database save logic here
-    pass
+def save_to_database(supabase, posts, batch_number, page_number):
+    data = [
+        {"batch_number": batch_number, "page_number": page_number, **post}
+        for post in posts
+    ]
+    upsert_data(supabase, "posts", data)
 
 
-def retry_processing(supabase_client):
+def retry_processing(supabase):
     # Fetch all pages that are not marked as 'done'
     not_done_pages = (
-        supabase_client.table("page_status").select("*").neq("status", "done").execute()
+        supabase.table("page_status").select("*").neq("status", "done").execute()
     )
 
     # Group pages by batch number
@@ -93,16 +97,16 @@ def retry_processing(supabase_client):
 
     # Process each batch
     for batch_number, pages in batches_to_process.items():
-        process_batch(supabase_client, batch_number, pages)
+        process_batch(supabase, batch_number, pages)
 
 
-def log_batch_initiation(supabase_client, batch_number):
-    supabase_client.table("batch_log").insert(
+def log_batch_initiation(supabase, batch_number):
+    supabase.table("batch_log").insert(
         {"batch_number": batch_number, "status": "started"}
     ).execute()
 
 
-def log_status(supabase_client, batch_number, page_number, status):
-    supabase_client.table("page_status").upsert(
+def log_status(supabase, batch_number, page_number, status):
+    supabase.table("page_status").upsert(
         {"batch_number": batch_number, "page_number": page_number, "status": status}
     ).execute()

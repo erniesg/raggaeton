@@ -1,6 +1,6 @@
 import unittest
 import logging
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 from raggaeton.backend.src.api.endpoints.ingest import (
     fetch_metadata,
     generate_batches,
@@ -43,55 +43,46 @@ class TestIngestionProcess(unittest.TestCase):
         self, mock_fetch_page_data, mock_save_to_database, mock_log_status
     ):
         # Setup mock responses
-        mock_fetch_page_data.return_value = {"id": "842575", "title": "Sample Post"}
+        mock_fetch_page_data.return_value = {
+            "posts": [
+                {
+                    "id": "842575",
+                    "title": "Sample Post",
+                    "content": "Content",
+                    "date_gmt": "2023-01-01T00:00:00",
+                    "modified_gmt": "2023-01-01T00:00:00",
+                    "link": "http://example.com",
+                    "status": "published",
+                }
+            ]
+        }
         mock_save_to_database.return_value = None
         mock_log_status.return_value = None
 
-        supabase_client = MagicMock()  # Mock the Supabase client
+        supabase = MagicMock()  # Mock the Supabase client
         batch_number = 1
         batch = [1, 2, 3]  # Example batch of 3 pages
 
         # Execute the function
-        process_batch(supabase_client, batch_number, batch)
+        process_batch(supabase, batch_number, batch)
 
         # Assertions to check if fetch_page_data was called correctly
         self.assertEqual(mock_fetch_page_data.call_count, 3)
-        mock_fetch_page_data.assert_has_calls(
-            [
-                patch(
-                    "raggaeton.backend.src.api.endpoints.ingest.fetch_page_data",
-                    args=(1,),
-                ),
-                patch(
-                    "raggaeton.backend.src.api.endpoints.ingest.fetch_page_data",
-                    args=(2,),
-                ),
-                patch(
-                    "raggaeton.backend.src.api.endpoints.ingest.fetch_page_data",
-                    args=(3,),
-                ),
-            ]
-        )
+        mock_fetch_page_data.assert_has_calls([call(1), call(2), call(3)])
 
         # Assertions to check if save_to_database was called correctly
+        print(
+            f"save_to_database call count: {mock_save_to_database.call_count}"
+        )  # Debugging line
         self.assertEqual(mock_save_to_database.call_count, 3)
 
         # Assertions to check if log_status was called correctly
         self.assertEqual(mock_log_status.call_count, 3)
         mock_log_status.assert_has_calls(
             [
-                patch(
-                    "raggaeton.backend.src.api.endpoints.ingest.log_status",
-                    args=(supabase_client, batch_number, 1, "done"),
-                ),
-                patch(
-                    "raggaeton.backend.src.api.endpoints.ingest.log_status",
-                    args=(supabase_client, batch_number, 2, "done"),
-                ),
-                patch(
-                    "raggaeton.backend.src.api.endpoints.ingest.log_status",
-                    args=(supabase_client, batch_number, 3, "done"),
-                ),
+                call(supabase, batch_number, 1, "done"),
+                call(supabase, batch_number, 2, "done"),
+                call(supabase, batch_number, 3, "done"),
             ]
         )
 

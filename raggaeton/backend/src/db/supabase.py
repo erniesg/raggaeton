@@ -14,9 +14,6 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Initialize the Supabase client
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 
 def insert_data(supabase, table_name, data):
     try:
@@ -55,4 +52,10 @@ def delete_data(supabase, table_name, match_criteria):
     for key, value in match_criteria.items():
         query = query.eq(key, value)
     response = query.execute()
+    return response.data
+
+
+def upsert_data(supabase, table_name, data):
+    response = supabase.table(table_name).upsert(data).execute()
+    logger.debug(f"Upsert Success: {response}")
     return response.data
