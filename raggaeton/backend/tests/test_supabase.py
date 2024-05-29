@@ -7,8 +7,9 @@ from raggaeton.backend.src.db.supabase import (
 )
 from raggaeton.backend.src.utils.common import load_config
 
+# Load configuration
 config = load_config()
-test_table = config.get("test_table_name")
+test_table = config.get("test_table")
 
 
 @pytest.fixture(scope="module")

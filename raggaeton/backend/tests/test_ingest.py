@@ -6,10 +6,16 @@ from raggaeton.backend.src.api.endpoints.ingest import (
     generate_batches,
     process_batch,
 )
+from raggaeton.backend.src.utils.common import load_config
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+config = load_config()
+TABLE_POSTS = config["table_posts"]
+TABLE_BATCH_LOG = config["table_batch_log"]
+TABLE_PAGE_STATUS = config["table_page_status"]
 
 
 class TestIngestionProcess(unittest.TestCase):
@@ -21,8 +27,9 @@ class TestIngestionProcess(unittest.TestCase):
             "per_page": 30,
             "current_page": 20,
             "total_pages": 1767,
+            "posts": [],  # Ensure 'posts' key is present
         }
-        metadata = fetch_metadata()
+        metadata = fetch_metadata(page=1)  # Provide the required page argument
         self.assertEqual(metadata["total_pages"], 1767)
         self.assertEqual(metadata["per_page"], 30)
 
@@ -38,18 +45,18 @@ class TestIngestionProcess(unittest.TestCase):
 
     @patch("raggaeton.backend.src.api.endpoints.ingest.log_status")
     @patch("raggaeton.backend.src.api.endpoints.ingest.save_to_database")
-    @patch("raggaeton.backend.src.api.endpoints.ingest.fetch_page_data")
+    @patch("raggaeton.backend.src.api.endpoints.ingest.fetch_metadata")
     def test_process_batch(
-        self, mock_fetch_page_data, mock_save_to_database, mock_log_status
+        self, mock_fetch_metadata, mock_save_to_database, mock_log_status
     ):
         # Setup mock responses
-        mock_fetch_page_data.return_value = {
+        mock_fetch_metadata.return_value = {
             "posts": [
                 {
                     "id": "842575",
                     "title": "Sample Post",
                     "content": "Content",
-                    "date_gmt": "2023-01-01T00:00:00",
+                    "date_gmt": "2023-01-01T00:00:00:00",
                     "modified_gmt": "2023-01-01T00:00:00",
                     "link": "http://example.com",
                     "status": "published",
@@ -67,8 +74,8 @@ class TestIngestionProcess(unittest.TestCase):
         process_batch(supabase, batch_number, batch)
 
         # Assertions to check if fetch_page_data was called correctly
-        self.assertEqual(mock_fetch_page_data.call_count, 3)
-        mock_fetch_page_data.assert_has_calls([call(1), call(2), call(3)])
+        self.assertEqual(mock_fetch_metadata.call_count, 3)
+        mock_fetch_metadata.assert_has_calls([call(1), call(2), call(3)])
 
         # Assertions to check if save_to_database was called correctly
         print(

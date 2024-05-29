@@ -1,7 +1,9 @@
 # config.yaml
 table_url: "https://zbqrnhxgqdhpfurfnoor.supabase.co"
-table_name: "tia_posts"
-test_table_name: "test_table"
+table_posts: "tia_posts"
+table_batch_log: "tia_batch_log"
+table_page_status: "tia_page_status"
+test_table: "test_table"
 
 embedding:
   models:
