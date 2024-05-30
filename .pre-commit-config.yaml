@@ -24,6 +24,7 @@ repos:
     rev: "v0.4.6"
     hooks:
       - id: ruff
+        args: [ --fix ]
         types_or: [python, pyi, jupyter]  # Add jupyter to linting
       - id: ruff-format
         types_or: [python, pyi, jupyter]

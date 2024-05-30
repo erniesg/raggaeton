@@ -3,12 +3,13 @@ import logging
 import modal
 import psycopg2
 from typing import List, Dict, Any
-from datetime import datetime
-
-from llama_index.core import VectorStoreIndex, Document, Settings
+from llama_index.core import SummaryIndex, VectorStoreIndex, Settings
+from llama_index.core.tools.query_engine import QueryEngineTool
+from llama_index.core.selectors.llm_selectors import LLMSingleSelector
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.node_parser import MarkdownNodeParser
+from llama_index.core.query_engine.router_query_engine import RouterQueryEngine
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.supabase import SupabaseVectorStore
 
@@ -26,15 +27,18 @@ index_image = modal.Image.debian_slim(python_version="3.10").pip_install(
     "llama-index-readers-database",
     "llama-index-embeddings-huggingface",
     "llama-index-vector-stores-supabase",
+    "llama-index-callbacks-deepeval",
     "psycopg2-binary",
+    "deepeval",
+    "llama-index-tools-google",
+    "llama-index-callbacks-arize-phoenix",
+    "arize-phoenix[evals]",
 )
 
 # Define the Modal app
-app = modal.App(
-    name="raggaeton-index-app",
-    image=index_image,
-    secrets=[modal.Secret.from_name("my-postgres-secret")],
-)
+app = modal.App(name="raggaeton-index-app", image=index_image)
+
+index_volume = modal.Volume.from_name("index-storage", create_if_missing=True)
 
 # Mount the local directory
 raggaeton_mount = modal.Mount.from_local_dir(
@@ -45,20 +49,17 @@ raggaeton_mount = modal.Mount.from_local_dir(
     recursive=True,
 )
 
-# Define a volume for caching the embedding model
-embedding_volume = modal.Volume.from_name("embedding-cache", create_if_missing=True)
-
 
 @app.local_entrypoint()
 def main():
+    logger.info("Starting main function")
     index_name = "my_index"
     embedding_model = "Alibaba-NLP/gte-base-en-v1.5"
     chunk_size = 512
     overlap = 128
     dimension = 768
     limit = 10
-
-    # Call the Modal function
+    logger.info("Calling create_index function with parameters")
     create_index.remote(
         index_name, embedding_model, chunk_size, overlap, dimension, limit
     )
@@ -66,21 +67,25 @@ def main():
 
 @app.function(
     mounts=[raggaeton_mount],
-    volumes={"/cache": embedding_volume},
+    volumes={"/cache": index_volume},
     secrets=[
         modal.Secret.from_name("my-postgres-secret"),
         modal.Secret.from_name("my-openai-secret"),
+        modal.Secret.from_name("my-search-secret"),
     ],
     gpu="any",
+    _allow_background_volume_commits=True,
 )
 def create_index(
     index_name, embedding_model, chunk_size, overlap, dimension, limit, config=None
 ):
+    logger.info("Starting create_index function")
     import sys
 
     sys.path.insert(0, "/app/raggaeton")
 
     from raggaeton.backend.src.utils.common import load_config
+    from raggaeton.backend.src.utils.utils import convert_to_documents
 
     os.getenv("OPENAI_API_KEY")
 
@@ -90,6 +95,12 @@ def create_index(
     # Use config defaults if parameters are not provided
     if config is None:
         config = load_config()
+
+    logger.info(f"Index name: {index_name}")
+    logger.info(f"Embedding model: {embedding_model}")
+    logger.info(f"Chunk size: {chunk_size}")
+    logger.info(f"Overlap: {overlap}")
+    logger.info(f"Dimension: {dimension}")
 
     index = index_name or config["index_name"]
     embedding_model = embedding_model or config["embedding"]["models"][0]
@@ -129,9 +140,10 @@ def create_index(
     # Create the vector store
     vector_store = SupabaseVectorStore(
         postgres_connection_string=f"postgresql://{db_params['user']}:{db_params['password']}@{db_params['host']}:{db_params['port']}/{db_params['dbname']}",
-        collection_name=index_name,
+        collection_name=index,
         dimension=dimension,
     )
+    logger.info("Vector store created")
 
     # Create the pipeline with transformations
     pipeline = IngestionPipeline(
@@ -139,18 +151,45 @@ def create_index(
         docstore=SimpleDocumentStore(),
         vector_store=vector_store,
     )
+    logger.info("Pipeline created")
 
     # Process documents
     pipeline.run(documents=documents)
 
-    index = VectorStoreIndex.from_vector_store(vector_store)
+    logger.info("Documents processed and summary index created")
 
-    # Query the index
-    query_engine = index.as_query_engine()
-    response = query_engine.query("What's up recently?")
-    print(response)
+    # # Create the index from the vector store
+    # index = VectorStoreIndex.from_vector_store(vector_store)
+    # logger.info("Index created from vector store")
 
-    return index
+    router_query_engine, vector_index = create_router_query_engine(
+        vector_store, documents
+    )
+
+    # Save the index to a Modal volume
+    # persist_dir = "/cache/index"
+    # vector_query_engine.storage_context.persist(persist_dir=persist_dir)
+    # logger.info(f"Index saved with ID: {index_name}")
+
+    # Create the chat engine with the router query engine
+    chat_engine = vector_index.as_chat_engine(
+        chat_mode="best", verbose=True, query_engine=router_query_engine
+    )
+
+    # chat_engine = index.as_chat_engine(chat_mode="best", verbose=True)
+
+    # query_engine = index.as_query_engine()
+    # response = chat_engine.query("What's up recently?")
+    response = chat_engine.chat("Why are Asian sports stars getting into VC space?")
+    logger.info(f"Response: {response}")
+
+    response = chat_engine.chat("Tell me about Grab’s profitability.")
+    logger.info(f"Response: {response}")
+
+    response = chat_engine.chat("Which 10 startups out of Africa are most promising?")
+    logger.info(f"Response: {response}")
+
+    return {"status": "Index created and evaluated successfully"}
 
 
 def load_data_from_postgres(
@@ -170,35 +209,54 @@ def load_data_from_postgres(
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    return [dict(zip(columns, row)) for row in rows]
+
+    # Convert rows to a list of dictionaries
+    data = [dict(zip(columns, row)) for row in rows]
+    return data
 
 
-def convert_to_documents(data: List[Dict[str, Any]]) -> List[Document]:
-    logger.info("Converting data to documents")
-    documents = []
-    for item in data:
-        logger.debug(f"Processing item: {item}")
-        # Convert datetime objects to strings
-        for key in ["date_gmt", "modified_gmt"]:
-            if isinstance(item[key], datetime):
-                item[key] = item[key].isoformat()
-        doc = Document(
-            text=item["md_content"],
-            metadata={
-                "id": item["id"],
-                "title": item["title"],
-                "date_gmt": item["date_gmt"],
-                "modified_gmt": item["modified_gmt"],
-                "link": item["link"],
-                "status": item["status"],
-                "excerpt": item.get("excerpt", ""),
-                "author_id": item["author_id"],
-                "author_first_name": item["author_first_name"],
-                "author_last_name": item["author_last_name"],
-                "editor": item.get("editor", ""),
-                "comments_count": item.get("comments_count", 0),
-            },
-        )
-        documents.append(doc)
-    logger.info(f"Converted {len(documents)} documents")
-    return documents
+def create_router_query_engine(vector_store, documents):
+    # Create the vector index
+    vector_index = VectorStoreIndex.from_vector_store(vector_store)
+    logger.info("Vector index created from vector store")
+
+    # Create the summary index
+    summary_index = SummaryIndex.from_documents(documents)
+    logger.info("Summary index created from documents")
+
+    # Create query engines
+    vector_query_engine = vector_index.as_query_engine()
+    summary_query_engine = summary_index.as_query_engine()
+
+    # Create tools
+    summary_tool = QueryEngineTool.from_defaults(
+        query_engine=summary_query_engine,
+        description="Useful for summarization questions related to the documents.",
+    )
+
+    vector_tool = QueryEngineTool.from_defaults(
+        query_engine=vector_query_engine,
+        description="Useful for retrieving specific context from the documents.",
+    )
+
+    # google_search_tool_spec = GoogleSearchToolSpec(
+    #     key=os.getenv("GOOGLE_API_KEY"),
+    #     engine=os.getenv("GOOGLE_SEARCH_ENGINE_ID"),
+    #     num=5,
+    # )
+    # logger.info("Google search tool created")
+
+    # google_search_tools = LoadAndSearchToolSpec.from_defaults(
+    #     google_search_tool_spec.to_tool_list()[0]
+    # ).to_tool_list()
+    # google_search_tool = google_search_tools[1]  # Extract the search tool
+
+    # Create Router Query Engine
+    router_query_engine = RouterQueryEngine(
+        selector=LLMSingleSelector.from_defaults(),
+        query_engine_tools=[summary_tool, vector_tool],
+        verbose=True,
+    )
+    logger.info("Router query engine created")
+
+    return router_query_engine, vector_index

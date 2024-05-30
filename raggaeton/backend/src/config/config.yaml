@@ -4,13 +4,23 @@ table_posts: "tia_posts"
 table_batch_log: "tia_batch_log"
 table_page_status: "tia_page_status"
 test_table: "test_table"
+supabase_host: "aws-0-ap-southeast-1.pooler.supabase.com"
+supabase_user: "postgres.zbqrnhxgqdhpfurfnoor"
+supabase_pw: "15ZJm1ADzRS1RjAl"
+index_name: "test_collection"
+
+document:
+  chunk_size: [512, 256]
+  overlap: [50, 20]
 
 embedding:
   models:
-    - "BAAI/bge-base-en-v1.5"
-    - "sentence-transformers/all-mpnet-base-v2"
-    - "jinaai/jina-embeddings-v2-small-en"
-  size: [256, 512]
+    - "Alibaba-NLP/gte-base-en-v1.5" #768
+    - "Alibaba-NLP/gte-large-en-v1.5" #1024
+    - "WhereIsAI/UAE-Large-V1" #1024
+    - "GritLM/GritLM-7B" #4096
+  dimension: [256, 512, 1024]
+  batch_size: 100
 
 llm:
   models:
