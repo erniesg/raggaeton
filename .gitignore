@@ -5,3 +5,4 @@ __pycache__/
 .DS_Store
 tia_cookie.txt
 .deepeval
+frontend/.next/

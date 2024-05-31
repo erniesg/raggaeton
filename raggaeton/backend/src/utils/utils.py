@@ -1,6 +1,10 @@
 from typing import List, Dict, Any
 from datetime import datetime
 from llama_index.core import Document
+from llama_index.core import SummaryIndex, VectorStoreIndex
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def convert_to_documents(data: List[Dict[str, Any]]) -> List[Document]:
@@ -29,3 +33,15 @@ def convert_to_documents(data: List[Dict[str, Any]]) -> List[Document]:
         )
         documents.append(doc)
     return documents
+
+
+def create_indices(vector_store, documents):
+    # Create the vector index
+    vector_index = VectorStoreIndex.from_vector_store(vector_store)
+    logger.info("Vector index created from vector store")
+
+    # Create the summary index
+    summary_index = SummaryIndex.from_documents(documents)
+    logger.info("Summary index created from documents")
+
+    return vector_index, summary_index

@@ -76,7 +76,6 @@ async def chat(request: Request):
 
     try:
         data = await request.json()
-        logger.info(f"Request data: {data}")
     except ClientDisconnect:
         logger.error("Client disconnected before request could be read")
         return {"error": "Client disconnected"}
@@ -97,11 +96,20 @@ async def chat(request: Request):
     def response_stream():
         response = agent.stream_chat(query)
         for token in response.response_gen:
-            yield f"data: {token}\n\n"
+            # yield f"{token}"
+            print("token printing...")
+            print(token, end="")
+            yield token + " "  # Yield each token with a space
+
+    # response = agent.chat(query)
 
     response = StreamingResponse(response_stream(), media_type="text/event-stream")
     end_time = time.time()
+    # print(f"Type of response: {type(response.print_response_stream())}")
+
     logger.info(f"Request processed in {end_time - start_time} seconds")
+    logger.info(f"Received response: {response}")
+
     return response
 
 
