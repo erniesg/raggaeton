@@ -1,5 +1,4 @@
 import logging
-import time
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from modal import App, Image, asgi_app, Secret, Mount
@@ -95,9 +94,8 @@ async def chat(request: Request):
     def response_stream():
         response = agent.stream_chat(query)
         for token in response.response_gen:
-            print(token, end="")  # Print each token to the console with a space
-            yield (token + " ")  # Yield each token with a space and encode it
-            time.sleep(0.1)
+            print(token, end="")
+            yield token.encode()
 
     return StreamingResponse(response_stream(), media_type="text/event-stream")
 
