@@ -66,7 +66,6 @@ fastapi_app = FastAPI()
 
 @fastapi_app.post("/chat")
 async def chat(request: Request):
-    start_time = time.time()
     logger.info("Received request at /chat endpoint")
     sys.path.insert(0, "/app/raggaeton")
 
@@ -96,21 +95,11 @@ async def chat(request: Request):
     def response_stream():
         response = agent.stream_chat(query)
         for token in response.response_gen:
-            # yield f"{token}"
-            print("token printing...")
-            print(token, end="")
-            yield token + " "  # Yield each token with a space
+            print(token, end="")  # Print each token to the console with a space
+            yield (token + " ")  # Yield each token with a space and encode it
+            time.sleep(0.1)
 
-    # response = agent.chat(query)
-
-    response = StreamingResponse(response_stream(), media_type="text/event-stream")
-    end_time = time.time()
-    # print(f"Type of response: {type(response.print_response_stream())}")
-
-    logger.info(f"Request processed in {end_time - start_time} seconds")
-    logger.info(f"Received response: {response}")
-
-    return response
+    return StreamingResponse(response_stream(), media_type="text/event-stream")
 
 
 @app.function(mounts=[raggaeton_mount], timeout=300)  # Set timeout to 300 seconds
