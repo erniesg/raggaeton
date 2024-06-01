@@ -3,10 +3,11 @@ from llama_index.core.tools.query_engine import QueryEngineTool
 from llama_index.core.query_engine.router_query_engine import RouterQueryEngine
 from llama_index.core.selectors.llm_selectors import LLMSingleSelector
 from llama_index.tools.google import GoogleSearchToolSpec
-from llama_index.packs.ragatouille_retriever import RAGatouilleRetrieverPack
 from llama_index.llms.openai import OpenAI
 from raggaeton.backend.src.utils.utils import create_indices  # Updated import
 from raggaeton.backend.src.utils.common import config_loader  # Import the config_loader
+from llama_index.core.llama_pack import download_llama_pack
+from raggaeton.backend.src.utils.utils import check_package_installed
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -40,15 +41,24 @@ def create_google_search_tool():
     return google_search_tools[0]  # Extract the first tool
 
 
-def create_rag_query_tool(
-    docs, index_name="my_index", model_name="gpt-3.5-turbo", top_k=10
-):
+def create_rag_query_tool(docs, index_name="my_index", model_name="gpt-4o", top_k=10):
+    # Check if ragatouille is installed
+    if not check_package_installed("ragatouille"):
+        raise ImportError(
+            "tools.py: ragatouille is not installed. Please install it with `pip install ragatouille`."
+        )
+
+    RAGatouilleRetrieverPack = download_llama_pack(
+        "RAGatouilleRetrieverPack", "./ragatouille_pack"
+    )
     ragatouille_pack = RAGatouilleRetrieverPack(
         docs, llm=OpenAI(model=model_name), index_name=index_name, top_k=top_k
     )
     rag_query = ragatouille_pack.get_modules()["query_engine"]
     return QueryEngineTool.from_defaults(
-        query_engine=rag_query, name="colbert_query_tool", description="RAGGA tool"
+        query_engine=rag_query,
+        name="colbert_query_tool",
+        description="COLBert tool for retrieval from selected sample of 900 Tech in Asia posts",
     )
 
 

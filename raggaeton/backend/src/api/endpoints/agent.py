@@ -5,12 +5,16 @@ from llama_index.core.agent import ReActAgent
 from llama_index.core import Settings
 from raggaeton.backend.src.utils.common import load_config, base_dir
 from raggaeton.backend.src.utils.common import config_loader
+import sys
 
 # Set up logging
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# Global variable to store the agent
+agent = None
 
 
 def get_custom_prompt() -> str:
@@ -64,6 +68,8 @@ def create_agent(
     Returns:
         Agent: The created agent.
     """
+    global agent
+
     if config is None:
         config = load_config()
 
@@ -81,12 +87,44 @@ def create_agent(
     custom_prompt = get_custom_prompt()
 
     if agent_type == "openai":
-        return OpenAIAgent.from_tools(
+        agent = OpenAIAgent.from_tools(
             tools, system_prompt=custom_prompt, verbose=verbose
         )
     elif agent_type == "react":
-        return ReActAgent.from_tools(
+        agent = ReActAgent.from_tools(
             tools, system_prompt=custom_prompt, verbose=verbose
         )
     else:
         raise ValueError(f"Unsupported agent type: {agent_type}")
+
+    return agent
+
+
+def initialize_agent():
+    global agent
+    if agent is None:
+        logger.info("Initializing components...")
+        sys.path.insert(0, "/app/raggaeton")
+
+        from raggaeton.backend.src.api.endpoints.tools import (
+            create_google_search_tool,
+            create_rag_query_tool,
+        )
+        from raggaeton.backend.src.utils.common import load_config
+        from raggaeton.backend.src.api.endpoints.index import load_documents
+
+        logger.debug("Loading configuration")
+        config = load_config()
+        logger.debug("Loading documents")
+        documents = load_documents(limit=10)
+
+        logger.debug("Creating tools")
+        tools = [create_google_search_tool(), create_rag_query_tool(docs=documents)]
+        logger.debug("Creating agent")
+        agent = create_agent("openai", tools, config=config, verbose=True)
+        logger.info(
+            f"Components initialized successfully with agent of type: {type(agent)} returned)"
+        )
+    else:
+        logger.info("Agent is already initialized")
+    return agent

@@ -9,7 +9,6 @@ from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.node_parser import MarkdownNodeParser
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.supabase import SupabaseVectorStore
-from raggaeton.backend.src.utils.utils import create_indices  # Updated import
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -88,9 +87,6 @@ def create_index(
 
     os.getenv("OPENAI_API_KEY")
 
-    # Set the cache directory for transformers
-    os.environ["TRANSFORMERS_CACHE"] = "/cache"
-
     logger.info(f"Index name: {index_name}")
     logger.info(f"Embedding model: {embedding_model}")
     logger.info(f"Chunk size: {chunk_size}")
@@ -147,48 +143,7 @@ def create_index(
 
     logger.info("Documents processed and summary index created")
 
-    # # Create the index from the vector store
-    # index = VectorStoreIndex.from_vector_store(vector_store)
-    # logger.info("Index created from vector store")
-    vector_index, summary_index = create_indices(vector_store, documents)
-
-    # Save the index to a Modal volume
-    # persist_dir = "/cache/index"
-    # vector_query_engine.storage_context.persist(persist_dir=persist_dir)
-    # logger.info(f"Index saved with ID: {index_name}")
-
-    # Create the chat engine with the router query engine
-    chat_engine = vector_index.as_chat_engine(chat_mode="best", verbose=True)
-
-    # chat_engine = index.as_chat_engine(chat_mode="best", verbose=True)
-
-    # query_engine = index.as_query_engine()
-    # response = chat_engine.query("What's up recently?")
-    response = chat_engine.chat("Why are Asian sports stars getting into VC space?")
-    logger.info(f"Response: {response}")
-    for node in response.source_nodes:
-        print(node.id_)
-        print(node.node.get_content()[:120])
-        print("reranking score: ", node.score)
-        print("retrieval score: ", node.node.metadata["retrieval_score"])
-        print("**********")
-    response = chat_engine.chat("Tell me about business management tools.")
-    logger.info(f"Response: {response}")
-    for node in response.source_nodes:
-        print(node.id_)
-        print(node.node.get_content()[:120])
-        print("reranking score: ", node.score)
-        print("retrieval score: ", node.node.metadata["retrieval_score"])
-        print("**********")
-    response = chat_engine.chat("Which 10 startups out of Africa are most promising?")
-    logger.info(f"Response: {response}")
-    for node in response.source_nodes:
-        print(node.id_)
-        print(node.node.get_content()[:120])
-        print("reranking score: ", node.score)
-        print("retrieval score: ", node.node.metadata["retrieval_score"])
-        print("**********")
-    return {"status": "Index created and evaluated successfully"}
+    return documents
 
 
 def load_data_from_postgres(

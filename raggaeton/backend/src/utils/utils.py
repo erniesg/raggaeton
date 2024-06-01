@@ -45,3 +45,10 @@ def create_indices(vector_store, documents):
     logger.info("Summary index created from documents")
 
     return vector_index, summary_index
+
+
+def check_package_installed(package_name: str) -> bool:
+    import importlib.util
+
+    package_spec = importlib.util.find_spec(package_name)
+    return package_spec is not None

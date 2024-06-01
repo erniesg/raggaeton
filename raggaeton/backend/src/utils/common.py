@@ -17,7 +17,13 @@ def find_project_root(current_path):
 
 
 # Determine the base directory by finding the project root
-base_dir = find_project_root(os.path.dirname(__file__))
+try:
+    base_dir = find_project_root(os.path.dirname(__file__))
+except FileNotFoundError:
+    # Fallback to a default path if pyproject.toml is not found
+    base_dir = (
+        "/root/raggaeton"  # Adjust this path as needed for your remote environment
+    )
 
 # Load environment variables
 dotenv_path = os.path.join(base_dir, ".env")
@@ -25,8 +31,8 @@ load_dotenv(dotenv_path=dotenv_path)
 
 
 def load_config():
-    """Load configuration from config.yaml located in the config directory under the project root."""
-    config_path = os.path.join(base_dir, "raggaeton/backend/src/config", "config.yaml")
+    """Load configuration from config.yaml located in the config directory under the package."""
+    config_path = os.path.join(os.path.dirname(__file__), "../config", "config.yaml")
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
 
@@ -58,15 +64,15 @@ class ConfigLoader:
 
     def _load_yaml_config(self):
         config_path = os.path.join(
-            base_dir, "raggaeton/backend/src/config", "config.yaml"
+            os.path.dirname(__file__), "../config", "config.yaml"
         )
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Config file not found at {config_path}")
         with open(config_path, "r") as file:
             self.config = yaml.safe_load(file)
 
     def _load_prompts(self):
-        prompt_path = os.path.join(
-            base_dir, "raggaeton/backend/src/config", "prompts.md"
-        )
+        prompt_path = os.path.join(os.path.dirname(__file__), "../config", "prompts.md")
         if os.path.exists(prompt_path):
             with open(prompt_path, "r") as file:
                 self.prompts = file.read()

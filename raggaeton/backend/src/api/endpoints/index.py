@@ -7,6 +7,14 @@ from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.supabase import SupabaseVectorStore
 from raggaeton.backend.src.utils.common import load_config
+import logging
+from typing import List
+from raggaeton.backend.src.utils.utils import convert_to_documents
+from raggaeton.backend.scripts.modal_index import load_data_from_postgres
+
+# Set up logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def create_index(
@@ -91,6 +99,35 @@ def create_index(
     print(response)
 
     return index
+
+
+def load_documents(limit: int = 10) -> List[Document]:
+    logger.info("Starting load_documents function")
+
+    # config = load_config()
+
+    # Load data from PostgreSQL with a limit
+    db_params = {
+        "host": os.getenv("PGHOST"),
+        "port": os.getenv("PGPORT"),
+        "user": os.getenv("PGUSER"),
+        "password": os.getenv("PGPASSWORD"),
+        "dbname": os.getenv("PGDATABASE"),
+    }
+    logger.info(f"Database Params: {db_params}")
+
+    rows = load_data_from_postgres(db_params, "tia_posts", limit)
+
+    # Convert rows to Document objects
+    documents = convert_to_documents(rows)
+
+    # Log the retrieved documents
+    logger.info(f"Retrieved {len(documents)} documents from the database.")
+    logger.info(
+        f"Document sample: {documents[0] if documents else 'No documents retrieved'}"
+    )
+
+    return documents
 
 
 # Example usage
