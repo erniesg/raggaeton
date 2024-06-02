@@ -37,6 +37,10 @@ bash
 curl -X POST "http://127.0.0.1:8000/chat" -H "Content-Type: application/json" -d "{\"query\": \"What are the top startups in Indonesia?\"}"
 ```
 
+### NOTE
+- The default agent used is OpenAIAgent which still thinks it's 2023... I kept it there as behaviour is more consistent.
+- You can try out the `TIA Bot` version by renaming `raggaeton/raggaeton/backend/src/config/_prompts.md` to `prompts.md` then restarting FastAPI. It's just that it "thinks" aloud and I haven't fixed the UI or why it doesn't complete its loops automatically in this mode, hence it was kept aside.
+
 # Implementation
 [Placeholder for diagram]
 
