@@ -10,11 +10,11 @@ from raggaeton.backend.src.utils.common import load_config
 import logging
 from typing import List
 from raggaeton.backend.src.utils.utils import convert_to_documents
-from raggaeton.backend.scripts.modal_index import load_data_from_postgres
+from raggaeton.backend.src.db.supabase import fetch_data
+from raggaeton.backend.src.utils.common import config_loader
 
-# Set up logging
+config_loader._setup_logging()
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 def create_index(
@@ -24,7 +24,7 @@ def create_index(
     overlap=None,
     dimension=None,
     config=None,
-    limit=10,
+    limit=None,
 ):
     # Use config defaults if parameters are not provided
     if config is None:
@@ -46,9 +46,10 @@ def create_index(
         "dbname": "postgres",
     }
     reader = DatabaseReader(**db_params)
-    documents = reader.load_data(
-        query=f"SELECT * FROM {config['table_posts']} LIMIT {limit}"
-    )
+    query = f"SELECT * FROM {config['table_posts']}"
+    if limit:
+        query += f" LIMIT {limit}"
+    documents = reader.load_data(query=query)
 
     # Create the embedding model
     embed_model = HuggingFaceEmbedding(
@@ -101,23 +102,10 @@ def create_index(
     return index
 
 
-def load_documents(limit: int = 10) -> List[Document]:
+def load_documents(limit: int = None) -> List[Document]:
     logger.info("Starting load_documents function")
-
-    config = load_config()
-
-    db_params = {
-        "host": os.getenv("PGHOST", config.get("supabase_host")),
-        "port": "5432",
-        "user": os.getenv("PGUSER", config.get("supabase_user")),
-        "password": os.getenv(
-            "PGPASSWORD", os.getenv("SUPABASE_PW", config.get("supabase_pw"))
-        ),
-        "dbname": "postgres",
-    }
-    logger.info(f"Database Params: {db_params}")
-
-    rows = load_data_from_postgres(db_params, "tia_posts", limit)
+    # Fetch data from Supabase
+    rows = fetch_data("tia_posts", limit=limit)
 
     # Convert rows to Document objects
     documents = convert_to_documents(rows)

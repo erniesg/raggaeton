@@ -14,13 +14,7 @@ from raggaeton.backend.src.api.endpoints.index import load_documents
 from raggaeton.backend.src.api.endpoints.tools import load_rag_query_tool
 import sys
 
-# Set up logging
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
 logger = logging.getLogger(__name__)
-
-# Global variable to store the agent
 agent = None
 
 
@@ -32,7 +26,9 @@ def get_custom_prompt() -> str:
             # Replace placeholder with the actual date
             today_date = datetime.now().strftime("%Y-%m-%d")
             prompt = prompt.replace("{insert today's date here}", today_date)
+            logger.debug(f"Custom prompt loaded: {prompt}")
             return prompt
+    logger.warning(f"Custom prompt file not found at: {prompt_path}")
     return ""
 
 
@@ -62,7 +58,7 @@ def create_agent(
     model_name=None,
     params=None,
     api_key_env=None,
-    verbose=False,
+    verbose=True,
 ):
     """
     Create an agent with the specified type and tools.
@@ -107,6 +103,7 @@ def create_agent(
         )
     else:
         raise ValueError(f"Unsupported agent type: {agent_type}")
+    logger.debug(f"Agent created with custom prompt: {custom_prompt}")
 
     return agent
 
@@ -128,12 +125,12 @@ def initialize_agent():
         logger.debug("Loading configuration")
         config = load_config()
         logger.debug("Loading documents")
-        documents = load_documents(limit=10)
+        documents = load_documents()
 
         logger.debug("Creating tools")
         tools = [create_google_search_tool(), create_rag_query_tool(docs=documents)]
         logger.debug("Creating agent")
-        agent = create_agent("openai", tools, config=config, verbose=True)
+        agent = create_agent("openai", tools, config=config)
         logger.info(
             f"Components initialized successfully with agent of type: {type(agent)} returned)"
         )
@@ -147,12 +144,12 @@ def init_agent():
     if agent is None:
         config = load_config()
         logger.debug("Loading documents")
-        documents = load_documents(limit=10)
+        documents = load_documents()
 
         logger.debug("Creating tools")
         tools = [create_google_search_tool(), create_rag_query_tool(docs=documents)]
         logger.debug("Creating agent")
-        agent = create_agent("openai", tools, config=config, verbose=True)
+        agent = create_agent("openai", tools, config=config)
         logger.info(
             f"Components initialized successfully with agent of type: {type(agent)} returned)"
         )
@@ -171,9 +168,7 @@ def load_agent(index_path=None):
 
         if index_path is None:
             # Use the default index path
-            index_path = os.path.join(
-                base_dir, "raggaeton/.ragatouille/colbert/indexes/my_index"
-            )
+            index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
 
         logger.debug(f"Using index path: {index_path}")
 
@@ -192,7 +187,6 @@ def load_agent(index_path=None):
             agent_type="openai",
             tools=[google_search_tool, rag_query_tool],
             config=config,
-            verbose=True,
         )
         logger.info(f"Agent loaded successfully with type: {type(agent)}")
     else:

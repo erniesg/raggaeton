@@ -1,6 +1,6 @@
 import requests
 from raggaeton.backend.src.db.supabase import supabase, upsert_data
-from raggaeton.backend.src.utils.common import load_config, base_dir
+from raggaeton.backend.src.utils.common import load_config, base_dir, config_loader
 import os
 import logging
 
@@ -9,7 +9,8 @@ TABLE_POSTS = config["table_posts"]
 TABLE_BATCH_LOG = config["table_batch_log"]
 TABLE_PAGE_STATUS = config["table_page_status"]
 
-logging.basicConfig(level=logging.INFO)
+config_loader._setup_logging()
+logger = logging.getLogger(__name__)
 
 
 def ingest(source, limit=None):

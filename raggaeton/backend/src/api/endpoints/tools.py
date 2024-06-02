@@ -7,16 +7,14 @@ from llama_index.tools.google import GoogleSearchToolSpec
 from llama_index.llms.openai import OpenAI
 from raggaeton.backend.src.utils.common import config_loader, base_dir
 from raggaeton.backend.src.utils.utils import (
-    check_package_installed,
     create_mock_document,
     create_indices,
 )
 
 import os
 
-# Set up logging
+config_loader._setup_logging()
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 def create_vector_tool(vector_index):
@@ -49,13 +47,7 @@ def create_google_search_tool():
 def create_rag_query_tool(
     docs, index_name="my_index", model_name="gpt-4o", top_k=10, index_path=None
 ):
-    # Check if ragatouille is installed
-    if not check_package_installed("ragatouille"):
-        raise ImportError(
-            "tools.py: ragatouille is not installed. Please install it with `pip install ragatouille`."
-        )
-    # Use base_dir to construct the pack path
-    pack_path = os.path.join(base_dir, "config/ragatouille_pack")
+    pack_path = os.path.join(base_dir, "raggaeton/backend/src/config/ragatouille_pack")
     logger.info(f"Ragatouille pack at: {pack_path}")
 
     if index_path:

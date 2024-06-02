@@ -26,13 +26,16 @@ def insert_data(table_name, data):
         raise
 
 
-def fetch_data(table_name, select_columns="*", filters=None):
+def fetch_data(table_name, select_columns="*", filters=None, limit=None):
     query = supabase.table(table_name).select(select_columns)
 
     if filters:
         for filter_condition in filters:
             method, *args = filter_condition
             query = getattr(query, method)(*args)
+
+    if limit:
+        query = query.limit(limit)
 
     response = query.execute()
     return response.data

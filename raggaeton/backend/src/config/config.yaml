@@ -45,3 +45,8 @@ llm:
         temperature: 0.1
         system_message: "You are an intelligent assistant."
       api_key_env: "CLAUDE_API_KEY"
+
+logging:
+  level: "INFO"
+  file: "/var/log/raggaeton/app.log"
+  enable_console: true

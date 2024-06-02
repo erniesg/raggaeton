@@ -2,12 +2,11 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from raggaeton.backend.src.api.endpoints.agent import load_agent  # Import agent
+from raggaeton.backend.src.utils.common import config_loader
 from contextlib import asynccontextmanager
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+config_loader._setup_logging()
 logger = logging.getLogger(__name__)
-
 # Create FastAPI app
 app = FastAPI()
 

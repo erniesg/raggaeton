@@ -1,5 +1,6 @@
 import os
 import yaml
+import logging
 from dotenv import load_dotenv
 
 
@@ -54,6 +55,7 @@ class ConfigLoader:
         self._load_env()
         self._load_yaml_config()
         self._load_prompts()
+        self._setup_logging()
 
     def _load_env(self):
         dotenv_path = os.path.join(base_dir, ".env")
@@ -84,6 +86,45 @@ class ConfigLoader:
         else:
             self.prompts = ""
 
+    def _setup_logging(self):
+        logging_config = self.config.get("logging", {})
+        log_level = logging_config.get("level", "INFO").upper()
+        log_file = logging_config.get("file", "")
+        enable_console = logging_config.get("enable_console", True)
+
+        log_level = getattr(logging, log_level, logging.INFO)
+
+        handlers = {}
+        if log_file:
+            handlers["file"] = {
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": log_file,
+                "maxBytes": 10485760,  # 10MB
+                "backupCount": 3,
+                "formatter": "default",
+            }
+        if enable_console:
+            handlers["console"] = {
+                "class": "logging.StreamHandler",
+                "formatter": "default",
+            }
+
+        logging_config_dict = {
+            "version": 1,
+            "formatters": {
+                "default": {
+                    "format": "%(asctime)s %(name)s %(levelname)s %(message)s",
+                },
+            },
+            "handlers": handlers,
+            "root": {
+                "level": log_level,
+                "handlers": list(handlers.keys()),
+            },
+        }
+
+        logging.config.dictConfig(logging_config_dict)
+
     def get_config(self):
         return self.config
 
@@ -94,5 +135,4 @@ class ConfigLoader:
         return self.prompts
 
 
-# Initialize the ConfigLoader once so it can be used globally
 config_loader = ConfigLoader()
