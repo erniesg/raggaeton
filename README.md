@@ -2,10 +2,14 @@
 
 RAGgaeton gives you a ReAct agent with ColBERTv2 retriever and Google search tools to answer questions about your business context!
 
-On the roadmap: supercharge this with grid search over RAG params from document length to LLM model used!
+On the roadmap: supercharge this with grid search over RAG params from document length to LLM model used. 🥳 🦾 🚀
 
 # Demo
 \[placeholder]
+
+The TIA Bot above is playing in regular speed... After I have preloaded the index and agent. Actual behaviour will be slower - keep your eyes on the console to see what's going on!
+
+It's thinking out loud because the custom prompt made it so, the default system prompt will not exhibit this behaviour. Probably fixable.
 
 # How to Run Locally
 - Clone the repository
@@ -39,6 +43,7 @@ curl -X POST "http://127.0.0.1:8000/chat" -H "Content-Type: application/json" -d
 ```
 
 ### NOTE
+- I only managed to ingest 900 posts despite multiple attempts so the knowledgebase is incomplete. Pages don't appear from 31 on. That seemed to be the limit?
 - The default agent used is OpenAIAgent with custom prompts `raggaeton/raggaeton/backend/src/config/prompts.md` so the text response is rather funky. If it looks like it hasn't finished its train of thought, just say something to continue.
 - The first time you load this, it will take a while to start, index and fetch data for the first time so you might want to view the console to view progress.
 - You can rename `prompts.md` to `_prompts.md` then restart FastAPI to see default OpenAI agent behaviour (it still thinks it's 2013...).
