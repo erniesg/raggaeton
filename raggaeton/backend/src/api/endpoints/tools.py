@@ -2,10 +2,10 @@ import logging
 from llama_index.core.tools.query_engine import QueryEngineTool
 from llama_index.core.query_engine.router_query_engine import RouterQueryEngine
 from llama_index.core.selectors.llm_selectors import LLMSingleSelector
+from llama_index.packs.ragatouille_retriever.base import RAGatouilleRetrieverPack
 from llama_index.tools.google import GoogleSearchToolSpec
 from llama_index.llms.openai import OpenAI
-from raggaeton.backend.src.utils.common import config_loader, find_project_root
-from llama_index.core.llama_pack import download_llama_pack
+from raggaeton.backend.src.utils.common import config_loader, base_dir
 from raggaeton.backend.src.utils.utils import (
     check_package_installed,
     create_mock_document,
@@ -54,17 +54,9 @@ def create_rag_query_tool(
         raise ImportError(
             "tools.py: ragatouille is not installed. Please install it with `pip install ragatouille`."
         )
-    # Go two levels up from the current file
-    current_file = os.path.abspath(__file__)
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+    # Use base_dir to construct the pack path
     pack_path = os.path.join(base_dir, "config/ragatouille_pack")
     logger.info(f"Ragatouille pack at: {pack_path}")
-
-    # Check if the pack is already present
-    if not os.path.exists(pack_path):
-        RAGatouilleRetrieverPack = download_llama_pack(
-            "RAGatouilleRetrieverPack", pack_path
-        )
 
     if index_path:
         # Load the index from the specified path
@@ -163,23 +155,16 @@ def create_router_query_engine(vector_store, documents):
 
 
 def load_rag_query_tool(index_path=None, docs=None):
-    """
-    Load the RAG query tool with the specified or default index path.
-
-    Args:
-        index_path (str, optional): The path to the index. Defaults to None.
-        docs (list, optional): List of documents. Defaults to None.
-
-    Returns:
-        QueryEngineTool: The loaded RAG query tool.
-    """
     if docs is None:
         # Use a mock document if none are provided
         docs = [create_mock_document()]
 
     # Default index path
     if index_path is None:
-        base_dir = find_project_root(os.path.dirname(__file__))
-        index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
+        index_path = os.path.join(
+            base_dir, "raggaeton/raggaeton/.ragatouille/colbert/indexes/my_index"
+        )
+
+    logger.debug(f"Loading RAG query tool from index path: {index_path}")
 
     return create_rag_query_tool(docs, index_path=index_path)

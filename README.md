@@ -38,8 +38,7 @@ In terms of the main RAG engine, I went with LlamaIndex as it seemed to be more 
 Once the main framework has been decided, my scaffold was to break the project into a few major modules which will encapsulate all relevant logic within, the `raggaeton/backend/src/api/endpoints` folder contains the below core RAG logic:
 * `ingest.py` for ingesting source documents with metadata and persistence locally
 * `index.py` is responsible for index creation for documents for efficient retrieval
-* `create_chat.py`makes use of `agent.py` with `tools.py` to initialise our desired agent behaviour
-* `chat.py` makes available an agent for interacting with our documents
+* `chat.py`makes use of `agent.py` with `tools.py` to initialise our desired agent behaviour and instantiates a FastAPI app
 
 Other supporting modules include:
 * `raggaeton/backend/scripts` folder contains the modal scripts ran to deploy this with scalable serverless resources such as downloading documents and preprocessing the HTML into markdown for easier LLM consumption

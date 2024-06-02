@@ -1,5 +1,6 @@
 import os
 import logging
+from datetime import datetime
 from llama_index.agent.openai import OpenAIAgent
 from llama_index.core.agent import ReActAgent
 from llama_index.core import Settings
@@ -27,7 +28,11 @@ def get_custom_prompt() -> str:
     prompt_path = os.path.join(base_dir, "raggaeton/backend/src/config", "prompts.md")
     if os.path.exists(prompt_path):
         with open(prompt_path, "r") as file:
-            return file.read()
+            prompt = file.read()
+            # Replace placeholder with the actual date
+            today_date = datetime.now().strftime("%Y-%m-%d")
+            prompt = prompt.replace("{insert today's date here}", today_date)
+            return prompt
     return ""
 
 
@@ -166,13 +171,21 @@ def load_agent(index_path=None):
 
         if index_path is None:
             # Use the default index path
-            index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
+            index_path = os.path.join(
+                base_dir, "raggaeton/.ragatouille/colbert/indexes/my_index"
+            )
 
-        # Load the index from the specified or default path
+        logger.debug(f"Using index path: {index_path}")
+
+        # Check if the index path exists
         if not os.path.exists(index_path):
-            raise FileNotFoundError(f"Index path {index_path} does not exist")
+            logger.warning(
+                f"Index path {index_path} does not exist. Initializing agent with default configuration."
+            )
+            return init_agent()
+
         # Create the RAG query tool with the loaded index
-        rag_query_tool = load_rag_query_tool()
+        rag_query_tool = load_rag_query_tool(index_path=index_path)
 
         # Initialize the agent with pre-loaded tools
         agent = create_agent(
