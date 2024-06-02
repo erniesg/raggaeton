@@ -10,11 +10,21 @@ On the roadmap: supercharge this with grid search over RAG params from document 
 # How to Run Locally
 - Clone the repository
 - `cd` to the repository
+- Run the following command to install dependencies
 ```bash
 pip install -r requirements.txt
 ```
+- Create a `.env` file in the project root with the following keys provided to you:
+```env
+SUPABASE_KEY=...
+SUPABASE_PW=...
+OPENAI_API_KEY=...
+MODAL_API_KEY=...
+GOOGLE_API_KEY=...
+GOOGLE_SEARCH_ENGINE_ID=...
+```
 - `uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug`
-
+- Add
 - Wait for the application to finish initializing. You should see the message: `Lifespan: Components initialized successfully` in console
 
 ### Interacting with the API
