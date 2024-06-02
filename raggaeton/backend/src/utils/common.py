@@ -5,15 +5,16 @@ from dotenv import load_dotenv
 
 def find_project_root(current_path):
     """Traverse up until we find pyproject.toml, indicating the project root."""
-    while not os.path.exists(os.path.join(current_path, "pyproject.toml")):
+    while True:
+        if os.path.exists(os.path.join(current_path, "pyproject.toml")):
+            return current_path
         parent = os.path.dirname(current_path)
-        if parent == current_path:
-            # We've reached the root of the filesystem without finding pyproject.toml
-            raise FileNotFoundError(
-                "Could not find pyproject.toml. Are you sure this is the right directory?"
-            )
+        if parent == current_path:  # Reached the root directory
+            break
         current_path = parent
-    return current_path
+    raise FileNotFoundError(
+        "Could not find pyproject.toml. Are you sure this is the right directory?"
+    )
 
 
 # Determine the base directory by finding the project root
@@ -24,6 +25,9 @@ except FileNotFoundError:
     base_dir = (
         "/root/raggaeton"  # Adjust this path as needed for your remote environment
     )
+
+# Print the base directory for verification
+print(f"Base directory: {base_dir}")
 
 # Load environment variables
 dotenv_path = os.path.join(base_dir, ".env")
@@ -59,6 +63,7 @@ class ConfigLoader:
             "CLAUDE_API_KEY": os.getenv("CLAUDE_API_KEY"),
             "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY"),
             "GOOGLE_SEARCH_ENGINE_ID": os.getenv("GOOGLE_SEARCH_ENGINE_ID"),
+            "SUPABASE_PW": os.getenv("SUPABASE_PW"),
             # Add other secrets here
         }
 

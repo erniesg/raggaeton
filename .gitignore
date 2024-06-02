@@ -6,3 +6,5 @@ __pycache__/
 tia_cookie.txt
 .deepeval
 frontend/.next/
+.ragatouille/
+frontend/node_modules/

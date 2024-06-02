@@ -7,6 +7,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def check_package_installed(package_name: str) -> bool:
+    import importlib.util
+
+    package_spec = importlib.util.find_spec(package_name)
+    return package_spec is not None
+
+
 def convert_to_documents(data: List[Dict[str, Any]]) -> List[Document]:
     documents = []
     for item in data:
@@ -35,6 +42,27 @@ def convert_to_documents(data: List[Dict[str, Any]]) -> List[Document]:
     return documents
 
 
+def create_mock_document() -> Document:
+    """Create a mock document for testing purposes."""
+    return Document(
+        text="This is a sample document.",
+        metadata={
+            "id": "1",
+            "title": "Sample Document",
+            "date_gmt": datetime.now().isoformat(),
+            "modified_gmt": datetime.now().isoformat(),
+            "link": "http://example.com",
+            "status": "published",
+            "excerpt": "This is a sample excerpt.",
+            "author_id": "author_1",
+            "author_first_name": "John",
+            "author_last_name": "Doe",
+            "editor": "Jane Doe",
+            "comments_count": 0,
+        },
+    )
+
+
 def create_indices(vector_store, documents):
     # Create the vector index
     vector_index = VectorStoreIndex.from_vector_store(vector_store)
@@ -45,10 +73,3 @@ def create_indices(vector_store, documents):
     logger.info("Summary index created from documents")
 
     return vector_index, summary_index
-
-
-def check_package_installed(package_name: str) -> bool:
-    import importlib.util
-
-    package_spec = importlib.util.find_spec(package_name)
-    return package_spec is not None

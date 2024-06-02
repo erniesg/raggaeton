@@ -104,15 +104,16 @@ def create_index(
 def load_documents(limit: int = 10) -> List[Document]:
     logger.info("Starting load_documents function")
 
-    # config = load_config()
+    config = load_config()
 
-    # Load data from PostgreSQL with a limit
     db_params = {
-        "host": os.getenv("PGHOST"),
-        "port": os.getenv("PGPORT"),
-        "user": os.getenv("PGUSER"),
-        "password": os.getenv("PGPASSWORD"),
-        "dbname": os.getenv("PGDATABASE"),
+        "host": os.getenv("PGHOST", config.get("supabase_host")),
+        "port": "5432",
+        "user": os.getenv("PGUSER", config.get("supabase_user")),
+        "password": os.getenv(
+            "PGPASSWORD", os.getenv("SUPABASE_PW", config.get("supabase_pw"))
+        ),
+        "dbname": "postgres",
     }
     logger.info(f"Database Params: {db_params}")
 

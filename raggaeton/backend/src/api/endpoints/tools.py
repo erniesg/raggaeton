@@ -4,10 +4,15 @@ from llama_index.core.query_engine.router_query_engine import RouterQueryEngine
 from llama_index.core.selectors.llm_selectors import LLMSingleSelector
 from llama_index.tools.google import GoogleSearchToolSpec
 from llama_index.llms.openai import OpenAI
-from raggaeton.backend.src.utils.utils import create_indices  # Updated import
-from raggaeton.backend.src.utils.common import config_loader  # Import the config_loader
+from raggaeton.backend.src.utils.common import config_loader, find_project_root
 from llama_index.core.llama_pack import download_llama_pack
-from raggaeton.backend.src.utils.utils import check_package_installed
+from raggaeton.backend.src.utils.utils import (
+    check_package_installed,
+    create_mock_document,
+    create_indices,
+)
+
+import os
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -41,20 +46,45 @@ def create_google_search_tool():
     return google_search_tools[0]  # Extract the first tool
 
 
-def create_rag_query_tool(docs, index_name="my_index", model_name="gpt-4o", top_k=10):
+def create_rag_query_tool(
+    docs, index_name="my_index", model_name="gpt-4o", top_k=10, index_path=None
+):
     # Check if ragatouille is installed
     if not check_package_installed("ragatouille"):
         raise ImportError(
             "tools.py: ragatouille is not installed. Please install it with `pip install ragatouille`."
         )
+    # Go two levels up from the current file
+    current_file = os.path.abspath(__file__)
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+    pack_path = os.path.join(base_dir, "config/ragatouille_pack")
+    logger.info(f"Ragatouille pack at: {pack_path}")
 
-    RAGatouilleRetrieverPack = download_llama_pack(
-        "RAGatouilleRetrieverPack", "./ragatouille_pack"
-    )
-    ragatouille_pack = RAGatouilleRetrieverPack(
-        docs, llm=OpenAI(model=model_name), index_name=index_name, top_k=top_k
-    )
+    # Check if the pack is already present
+    if not os.path.exists(pack_path):
+        RAGatouilleRetrieverPack = download_llama_pack(
+            "RAGatouilleRetrieverPack", pack_path
+        )
+
+    if index_path:
+        # Load the index from the specified path
+        if not os.path.exists(index_path):
+            raise FileNotFoundError(f"Index path {index_path} does not exist")
+        ragatouille_pack = RAGatouilleRetrieverPack(
+            docs,
+            llm=OpenAI(model=model_name),
+            index_name=index_name,
+            top_k=top_k,
+            index_path=index_path,
+        )
+    else:
+        ragatouille_pack = RAGatouilleRetrieverPack(
+            docs, llm=OpenAI(model=model_name), index_name=index_name, top_k=top_k
+        )
+
     rag_query = ragatouille_pack.get_modules()["query_engine"]
+    logger.info(f"Ragatouille indexed at: {ragatouille_pack.index_path}")
+    # TODO: persist and remember index location for subsequent loading
     return QueryEngineTool.from_defaults(
         query_engine=rag_query,
         name="colbert_query_tool",
@@ -130,3 +160,26 @@ def create_router_query_engine(vector_store, documents):
     logger.info("Router query engine created")
 
     return router_query_engine, vector_index, summary_index
+
+
+def load_rag_query_tool(index_path=None, docs=None):
+    """
+    Load the RAG query tool with the specified or default index path.
+
+    Args:
+        index_path (str, optional): The path to the index. Defaults to None.
+        docs (list, optional): List of documents. Defaults to None.
+
+    Returns:
+        QueryEngineTool: The loaded RAG query tool.
+    """
+    if docs is None:
+        # Use a mock document if none are provided
+        docs = [create_mock_document()]
+
+    # Default index path
+    if index_path is None:
+        base_dir = find_project_root(os.path.dirname(__file__))
+        index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
+
+    return create_rag_query_tool(docs, index_path=index_path)
