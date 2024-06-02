@@ -116,7 +116,7 @@ If I want my entire system to be perfectly planned out with minimal if not zero 
 
 ### Building a Mental Model for Modal
 I really like Modal because I think it solves a real problem. I'm always a champion for products and services that dares to design backwards from how things should be rather than settle for a compromise with the status quo of how things are. For example, with Docker.
-\[placeholder]
+![Docker Image](https://erikbern.com/assets/docker.jpeg)
 
 Maybe another way to think about it is that it's an abstraction layer on top of containerisation technologies that offer data scientists, AI and ML engineers the hard-to-come-by delight of focusing on your pipelines and logic because web deployment, client-server interactions, secrets, serialisation and deserialisation, async, promise, WebSockets... What is even all these nonsense?
 
