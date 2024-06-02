@@ -1,0 +1,2 @@
+google-cloud-secret-manager==2.20.0
+ragatouille==0.0.8.post2

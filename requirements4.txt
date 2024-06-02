@@ -1,0 +1,8 @@
+llama-hub==0.0.79.post1
+llama-index==0.10.42
+llama-index-embeddings-huggingface==0.2.1
+llama-index-llms-anthropic==0.1.11
+llama-index-packs-ragatouille-retriever==0.1.3
+llama-index-readers-database==0.1.4
+llama-index-tools-google==0.1.5
+llama-index-vector-stores-supabase==0.1.5
