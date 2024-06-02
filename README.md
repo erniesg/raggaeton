@@ -44,7 +44,7 @@ curl -X POST "http://127.0.0.1:8000/chat" -H "Content-Type: application/json" -d
 - You can try out the `TIA Bot` version by renaming `raggaeton/raggaeton/backend/src/config/_prompts.md` to `prompts.md` then restarting FastAPI. It's just that it "thinks" aloud and I haven't fixed the UI or why it doesn't complete its loops automatically in this mode, hence it was kept aside.
 
 # Implementation
-[Placeholder for diagram]
+![Architecture diagram](https://github.com/erniesg/raggaeton/blob/master/raggaeton/public/archi.png?raw=true)
 
 This full-stack RAG project is structurally composed as above. We make use of `Vercel AI SDK`'s React Server Components and Streamable UI over `Gradio`/`Streamlit` for a more enjoyable UX.
 
