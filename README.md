@@ -5,7 +5,9 @@ RAGgaeton gives you a ReAct agent with ColBERTv2 retriever and Google search too
 On the roadmap: supercharge this with grid search over RAG params from document length to LLM model used. 🥳 🦾 🚀
 
 # Demo
-\[placeholder]
+Click the GIF below to watch the demo video of ASKTia in action:
+
+[![Demo Video](https://github.com/erniesg/raggaeton/blob/master/raggaeton/public/tiamd.gif?raw=true)](https://drive.google.com/file/d/1pGYvjtujsI304YWpbWLsDii_3XQhxTIy/view?usp=sharing)
 
 The TIA Bot above is playing in regular speed... After I have preloaded the index and agent. Actual behaviour will be slower - keep your eyes on the console to see what's going on!
 
@@ -91,7 +93,7 @@ These key decisions and how they were derived are explained in greater detail be
 
 The idea was also that these open source models would allow for fine-tuning of a custom embedding that best knows our documents. Unfortunately, the LlamaIndex Supabase vector store integration only supported up to 768 when I tested it so it seemed kinda pointless.
 
-That was when I decided to give `ColBERTv2` which seems more experimental and is not widely supported by all vector databases yet (it's only supported by Vespa and Qdrant has it on the roadmap) a try. Other people's experiments \[[1](https://www.linkedin.com/pulse/guidebook-state-of-the-art-embeddings-information-aapo-tanskanen-pc3mf/)]  and its use as a reranker gave me confidence that this will suit our needs.
+That was when I decided to give `ColBERTv2` which seems more experimental and is not widely supported by all vector databases yet (it's only supported by Vespa and Qdrant has it on the roadmap) a try. Other people's experiments \[[1](https://www.linkedin.com/pulse/guidebook-state-of-the-art-embeddings-information-aapo-tanskanen-pc3mf/)] \[[2](https://superlinked.com/vectorhub/articles/evaluation-rag-retrieval-chunking-methods)] and its use as a reranker gave me confidence that this will suit our needs.
 
 ### Rapid Iteration & Deployment
 Since so many points on an end-to-end RAG app is possible for optimisation and transformers have proven that machines can perform such optimisations much better than humans, `raggaeton` was designed with a goal to allow for grid search and leverage serverless compute for hyperparameter tuning, i.e. suppose we want to test different configurations as below:
@@ -189,7 +191,7 @@ There were a few times on this project that I got too carried away on exploring 
 
 Grid search, a more delightful UX and web deployment were areas that took up a lot of my effort aside from the core work of an effective RAG engine and they don't map to the full set of dimensions that I'll be graded upon well. :( But I had lots of fun which is a reward in its own right.
 
-My stance on prompting vs. programming is like my lean towards hyperparameter tuning with grid search: let the LLM do it. It is necessary but it is something that I like to ask the LLM to do for me in particular. Good prompts are obviously necessary but natural language is highly imprecise and any system that relies on prompting effectiveness to be good feels especially brittle to me. The main motivation in letting LLMs handle this is to structure and constrain such non-deterministic programmes to be as backward-compatible with software and be more like programming, rather than whispering black magic, as much as possible. It is for this reason that for future extensions of RAGgaeton, I'd like to explore DSPy and/or Instructor further!
+My stance on prompting vs. programming is like my lean towards hyperparameter tuning with grid search: let the LLM do it. It is necessary but it is something that I like to ask the LLM to do for me in particular. Good prompts are obviously necessary but natural language is highly imprecise and any system that relies on prompting effectiveness to be good feels especially brittle to me. The main motivation in letting LLMs handle this is to structure and constrain such non-deterministic programmes to be as backward-compatible with software and be more like programming, rather than whispering black magic, as much as possible. It is for this reason that for future extensions of RAGgaeton, I'd like to explore [DSPy](https://github.com/stanfordnlp/dspy) and/or [Instructor](https://github.com/jxnl/instructor) further!
 
 ### Better Hierarchal Planning
 Related to the first point, a clearer scope would have informed much better hierarchal planning on my part to bind myself to requirements more strictly. From first commit
