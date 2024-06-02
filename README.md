@@ -24,7 +24,9 @@ GOOGLE_API_KEY=...
 GOOGLE_SEARCH_ENGINE_ID=...
 ```
 - Run the following command
-- `uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug`
+```python
+uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug
+```
 - Wait for the application to finish initializing. You should see the message: `Lifespan: Components initialized successfully` in console
 
 ### Interacting with the API
