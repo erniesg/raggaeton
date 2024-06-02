@@ -5,7 +5,7 @@ RAGgaeton gives you a ReAct agent with ColBERTv2 retriever and Google search too
 On the roadmap: supercharge this with grid search over RAG params from document length to LLM model used. 🥳 🦾 🚀
 
 # Demo
-Click the GIF below to watch the demo video of ASKTia in action:
+Click the GIF below to watch the demo video of AskTIA in action:
 
 [![Demo Video](https://github.com/erniesg/raggaeton/blob/master/raggaeton/public/tiamd.gif?raw=true)](https://drive.google.com/file/d/1pGYvjtujsI304YWpbWLsDii_3XQhxTIy/view?usp=sharing)
 
