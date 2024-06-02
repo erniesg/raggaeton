@@ -14,6 +14,7 @@ It's thinking out loud because the custom prompt made it so, the default system 
 # How to Run Locally
 - Clone the repository
 - `cd` to the repository
+- Recommended Python version: `3.10.6`
 - Run the following command to install dependencies
 ```bash
 pip install -r requirements.txt
@@ -31,7 +32,7 @@ GOOGLE_SEARCH_ENGINE_ID=...
 ```python
 uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug
 ```
-- Wait for the application to finish initializing. You should see the message: `Lifespan: Components initialized successfully` in console
+- Wait for the application to finish initialising. You should see the message: `Lifespan: Components initialized successfully` in console
 
 ### Interacting with the API
 - Visit the [raggaeton-frontend](https://github.com/erniesg/raggaeton-frontend) repository and follow the instructions there to interact with the API via the front-end
