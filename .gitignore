@@ -9,3 +9,5 @@ frontend/.next/
 .ragatouille/
 frontend/node_modules/
 *ragatouille_pack/
+log/
+*.log

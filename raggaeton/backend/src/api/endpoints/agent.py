@@ -4,15 +4,13 @@ from datetime import datetime
 from llama_index.agent.openai import OpenAIAgent
 from llama_index.core.agent import ReActAgent
 from llama_index.core import Settings
-from raggaeton.backend.src.utils.common import load_config, base_dir
-from raggaeton.backend.src.utils.common import config_loader
+from raggaeton.backend.src.utils.common import load_config, base_dir, config_loader
 from raggaeton.backend.src.api.endpoints.tools import (
     create_google_search_tool,
     create_rag_query_tool,
 )
 from raggaeton.backend.src.api.endpoints.index import load_documents
 from raggaeton.backend.src.api.endpoints.tools import load_rag_query_tool
-import sys
 
 logger = logging.getLogger(__name__)
 agent = None
@@ -108,51 +106,39 @@ def create_agent(
     return agent
 
 
-def initialize_agent():
-    # refactoring to remove this
+def init_agent(index_path=None):
     global agent
     if agent is None:
-        logger.info("Initializing components...")
-        sys.path.insert(0, "/app/raggaeton")
-
-        from raggaeton.backend.src.api.endpoints.tools import (
-            create_google_search_tool,
-            create_rag_query_tool,
-        )
-        from raggaeton.backend.src.utils.common import load_config
-        from raggaeton.backend.src.api.endpoints.index import load_documents
-
-        logger.debug("Loading configuration")
+        logger.info("Initializing agent components...")
         config = load_config()
-        logger.debug("Loading documents")
-        documents = load_documents()
 
-        logger.debug("Creating tools")
-        tools = [create_google_search_tool(), create_rag_query_tool(docs=documents)]
-        logger.debug("Creating agent")
-        agent = create_agent("openai", tools, config=config)
-        logger.info(
-            f"Components initialized successfully with agent of type: {type(agent)} returned)"
+        google_search_tool = create_google_search_tool()
+
+        # Use the default index path if none is provided
+        if index_path is None:
+            index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
+
+        logger.debug(f"Using index path: {index_path}")
+
+        # Check if the index path exists
+        if os.path.exists(index_path):
+            # Load the RAG query tool with the existing index
+            rag_query_tool = load_rag_query_tool(index_path=index_path)
+            tools = [google_search_tool, rag_query_tool]
+        else:
+            logger.warning(
+                f"Index path {index_path} does not exist. Initializing agent with default configuration."
+            )
+            documents = load_documents()
+            tools = [google_search_tool, create_rag_query_tool(docs=documents)]
+
+        # Initialize the agent with pre-loaded tools
+        agent = create_agent(
+            agent_type="openai",
+            tools=tools,
+            config=config,
         )
-    else:
-        logger.info("Agent is already initialized")
-    return agent
-
-
-def init_agent():
-    global agent
-    if agent is None:
-        config = load_config()
-        logger.debug("Loading documents")
-        documents = load_documents()
-
-        logger.debug("Creating tools")
-        tools = [create_google_search_tool(), create_rag_query_tool(docs=documents)]
-        logger.debug("Creating agent")
-        agent = create_agent("openai", tools, config=config)
-        logger.info(
-            f"Components initialized successfully with agent of type: {type(agent)} returned)"
-        )
+        logger.info(f"Agent initialized successfully with type: {type(agent)}")
     else:
         logger.info("Agent is already initialized")
     return agent

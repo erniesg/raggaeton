@@ -1,12 +1,9 @@
 from llama_index.vector_stores.supabase import SupabaseVectorStore
 from llama_index.core import VectorStoreIndex
-
 from raggaeton.backend.src.utils.common import load_config
 import logging
 
-# Set up logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 def retrieve_stored_index():

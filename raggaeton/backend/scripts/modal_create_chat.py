@@ -13,11 +13,7 @@ from llama_index.core import set_global_handler
 
 set_global_handler("deepeval")
 
-# Set up logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-
-# Define the Modal image with necessary dependencies
 chat_image = modal.Image.debian_slim(python_version="3.10").pip_install(
     "requests",
     "supabase",
@@ -33,7 +29,6 @@ chat_image = modal.Image.debian_slim(python_version="3.10").pip_install(
     "psycopg2-binary",
 )
 
-# Define the Modal app
 app = modal.App(
     name="raggaeton-chat-app",
     image=chat_image,
@@ -43,10 +38,8 @@ app = modal.App(
     ],
 )
 
-# Define a volume for caching the embedding model and storing the index
 index_volume = modal.Volume.from_name("index-storage", create_if_missing=True)
 
-# Mount the local directory
 raggaeton_mount = modal.Mount.from_local_dir(
     local_path=os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")),
     remote_path="/app/raggaeton",

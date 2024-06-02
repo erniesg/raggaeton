@@ -3,10 +3,7 @@ from supabase import create_client
 from raggaeton.backend.src.utils.common import load_config
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
 config = load_config()
 
 SUPABASE_URL = config["table_url"]

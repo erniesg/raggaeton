@@ -5,10 +5,7 @@ import modal
 import requests
 import time
 
-# logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
-# Suppress debug logs from specific libraries
 logging.getLogger("hpack").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -45,8 +42,8 @@ def main():
         "TABLE_PAGE_STATUS": config["table_page_status"],
     }
 
-    total_pages = 100  # Set the total number of pages you want to collect
-    batch_size = 10  # Number of pages to process per batch
+    total_pages = 100
+    batch_size = 10
 
     for start_page in range(1, total_pages + 1, batch_size):
         batch_args = [
@@ -54,7 +51,6 @@ def main():
         ]
 
         try:
-            # Consume the results to ensure the starmap call is executed
             list(fetch_and_process_page.starmap(batch_args))
         except Exception as e:
             logger.error(f"Error processing batch starting at page {start_page}: {e}")
@@ -65,7 +61,6 @@ def fetch_and_process_page(page, env_vars):
     sys.path.insert(0, "/app/raggaeton")
     logger.info(f"Current working directory: {os.getcwd()}")
 
-    # Set environment variables for the function
     os.environ.update(env_vars)
 
     from raggaeton.backend.src.api.endpoints.ingest import (
@@ -78,9 +73,7 @@ def fetch_and_process_page(page, env_vars):
         page_data = fetch_metadata_remote.remote(page)
         posts = extract_relevant_data(page_data)
         if posts:
-            save_to_database(
-                posts, 1, page
-            )  # Assuming batch_number is 1 for simplicity
+            save_to_database(posts, 1, page)
             log_status(1, page, "done")
             logger.info(f"Completed processing page {page}")
     except Exception as e:
@@ -137,7 +130,6 @@ def fetch_metadata_remote(page):
                 f"Fetched page {response_json['current_page']} with {len(response_json['posts'])} posts."
             )
 
-            # Update the cookie if a new one is issued
             if "set-cookie" in response.headers:
                 new_cookie = response.headers["set-cookie"]
                 with open(cookie_path, "w") as file:

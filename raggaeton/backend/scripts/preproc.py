@@ -4,23 +4,19 @@ from supabase import create_client
 import logging
 from raggaeton.backend.src.utils.common import load_config
 
-# Load configuration and environment variables
 config = load_config()
-
+logger = logging.getLogger(__name__)
 SUPABASE_URL = config["table_url"]
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 MODAL_API_KEY = os.getenv("MODAL_API_KEY")
 
-# Initialize Supabase client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def fetch_html_content(limit=None):
-    """Fetch HTML content from the Supabase table."""
     try:
         query = supabase.table(config["table_posts"]).select("id, content")
         if limit:
@@ -48,7 +44,6 @@ def convert_html_to_markdown(html_content):
 
 
 def update_markdown_content(record_id, markdown_content):
-    """Update the Markdown content in the Supabase table."""
     try:
         supabase.table("tia_posts").update({"md_content": markdown_content}).eq(
             "id", record_id
@@ -59,7 +54,6 @@ def update_markdown_content(record_id, markdown_content):
 
 
 def main(limit=None):
-    """Main function to process content."""
     logger.info("Starting content processing")
 
     # Fetch HTML content from Supabase

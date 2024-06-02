@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
-from raggaeton.backend.src.api.endpoints.agent import load_agent  # Import agent
+from raggaeton.backend.src.api.endpoints.agent import init_agent  # Import agent
 from raggaeton.backend.src.utils.common import config_loader
 from contextlib import asynccontextmanager
 
@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
     logger.info("Lifespan: Initializing components...")
 
     # Load the agent with the default index path
-    agent = load_agent()
+    agent = init_agent()
     if agent is None:
         logger.error("Agent loading failed. Agent is None.")
     else:

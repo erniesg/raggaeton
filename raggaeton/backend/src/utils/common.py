@@ -18,19 +18,14 @@ def find_project_root(current_path):
     )
 
 
-# Determine the base directory by finding the project root
 try:
     base_dir = find_project_root(os.path.dirname(__file__))
 except FileNotFoundError:
-    # Fallback to a default path if pyproject.toml is not found
-    base_dir = (
-        "/root/raggaeton"  # Adjust this path as needed for your remote environment
-    )
+    base_dir = "/root/raggaeton"  # Adjust this fallback path as needed for remote env
 
-# Print the base directory for verification
-print(f"Base directory: {base_dir}")
+logger = logging.getLogger(__name__)
+logger.info(f"Base directory: {base_dir}")
 
-# Load environment variables
 dotenv_path = os.path.join(base_dir, ".env")
 load_dotenv(dotenv_path=dotenv_path)
 
@@ -96,6 +91,10 @@ class ConfigLoader:
 
         handlers = {}
         if log_file:
+            log_file = os.path.join(base_dir, log_file)
+            log_dir = os.path.dirname(log_file)
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
             handlers["file"] = {
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": log_file,

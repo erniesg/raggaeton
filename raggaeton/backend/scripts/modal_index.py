@@ -1,20 +1,15 @@
 import os
 import logging
 import modal
-import psycopg2
-from typing import List, Dict, Any
 from llama_index.core import Settings
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.node_parser import MarkdownNodeParser
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.supabase import SupabaseVectorStore
+from raggaeton.backend.src.db.supabase import fetch_data
 
-# Set up logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-
-# Define the Modal image with necessary dependencies
 index_image = modal.Image.debian_slim(python_version="3.10").pip_install(
     "requests",
     "supabase",
@@ -34,12 +29,10 @@ index_image = modal.Image.debian_slim(python_version="3.10").pip_install(
     "ragatouille",
 )
 
-# Define the Modal app
 app = modal.App(name="raggaeton-index-app", image=index_image)
 
 index_volume = modal.Volume.from_name("index-storage", create_if_missing=True)
 
-# Mount the local directory
 raggaeton_mount = modal.Mount.from_local_dir(
     local_path=os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")),
     remote_path="/app/raggaeton",
@@ -93,11 +86,9 @@ def create_index(
     logger.info(f"Overlap: {overlap}")
     logger.info(f"Dimension: {dimension}")
 
-    # Set the chunk size and overlap in the Settings object
     Settings.chunk_size = chunk_size
     Settings.chunk_overlap = overlap
 
-    # Load data from PostgreSQL with a limit
     db_params = {
         "host": os.getenv("PGHOST"),
         "port": os.getenv("PGPORT"),
@@ -105,24 +96,20 @@ def create_index(
         "password": os.getenv("PGPASSWORD"),
         "dbname": os.getenv("PGDATABASE"),
     }
-    rows = load_data_from_postgres(db_params, "tia_posts", limit)
+    rows = fetch_data("tia_posts", limit=limit)
 
-    # Convert rows to Document objects
     documents = convert_to_documents(rows)
 
-    # Log the retrieved documents
     logger.info(f"Retrieved {len(documents)} documents from the database.")
     logger.info(
         f"Document sample: {documents[0] if documents else 'No documents retrieved'}"
     )
 
-    # Create the embedding model with trust_remote_code=True
     embed_model = HuggingFaceEmbedding(
         model_name=embedding_model, trust_remote_code=True
     )
     Settings.embed_model = embed_model
 
-    # Create the vector store
     vector_store = SupabaseVectorStore(
         postgres_connection_string=f"postgresql://{db_params['user']}:{db_params['password']}@{db_params['host']}:{db_params['port']}/{db_params['dbname']}",
         collection_name=index_name,
@@ -130,7 +117,6 @@ def create_index(
     )
     logger.info("Vector store created")
 
-    # Create the pipeline with transformations
     pipeline = IngestionPipeline(
         transformations=[MarkdownNodeParser(), embed_model],
         docstore=SimpleDocumentStore(),
@@ -138,32 +124,8 @@ def create_index(
     )
     logger.info("Pipeline created")
 
-    # Process documents
     pipeline.run(documents=documents)
 
     logger.info("Documents processed and summary index created")
 
     return documents
-
-
-def load_data_from_postgres(
-    db_params: Dict[str, str], table_name: str, limit: int
-) -> List[Dict[str, Any]]:
-    conn = psycopg2.connect(
-        host=db_params["host"],
-        port=db_params["port"],
-        user=db_params["user"],
-        password=db_params["password"],
-        dbname=db_params["dbname"],
-    )
-    cursor = conn.cursor()
-    query = f"SELECT * FROM {table_name} LIMIT {limit}"
-    cursor.execute(query)
-    columns = [desc[0] for desc in cursor.description]
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    # Convert rows to a list of dictionaries
-    data = [dict(zip(columns, row)) for row in rows]
-    return data
