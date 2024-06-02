@@ -2,6 +2,7 @@ import os
 import yaml
 import logging
 from dotenv import load_dotenv
+from google.cloud import secretmanager
 
 
 def find_project_root(current_path):
@@ -53,16 +54,48 @@ class ConfigLoader:
         self._setup_logging()
 
     def _load_env(self):
-        dotenv_path = os.path.join(base_dir, ".env")
-        load_dotenv(dotenv_path=dotenv_path)
-        self.secrets = {
-            "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
-            "CLAUDE_API_KEY": os.getenv("CLAUDE_API_KEY"),
-            "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY"),
-            "GOOGLE_SEARCH_ENGINE_ID": os.getenv("GOOGLE_SEARCH_ENGINE_ID"),
-            "SUPABASE_PW": os.getenv("SUPABASE_PW"),
-            # Add other secrets here
-        }
+        gcp_credentials_path = os.getenv("GCP_CREDENTIALS_PATH")
+        if gcp_credentials_path and os.path.exists(gcp_credentials_path):
+            logger.info(
+                "GCP credentials path provided. Attempting to load secrets from GCP Secret Manager."
+            )
+            self._load_gcp_secrets(gcp_credentials_path)
+        else:
+            logger.info(
+                "No GCP credentials path provided or file does not exist. Falling back to local .env file."
+            )
+            dotenv_path = os.path.join(base_dir, ".env")
+            load_dotenv(dotenv_path=dotenv_path)
+            self.secrets = {
+                "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
+                "CLAUDE_API_KEY": os.getenv("CLAUDE_API_KEY"),
+                "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY"),
+                "GOOGLE_SEARCH_ENGINE_ID": os.getenv("GOOGLE_SEARCH_ENGINE_ID"),
+                "SUPABASE_PW": os.getenv("SUPABASE_PW"),
+                # Add other secrets here
+            }
+
+    def _load_gcp_secrets(self, credentials_path):
+        try:
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+            client = secretmanager.SecretManagerServiceClient()
+            project_id = os.getenv("GCP_PROJECT_ID")
+            secret_names = [
+                "OPENAI_API_KEY",
+                "CLAUDE_API_KEY",
+                "GOOGLE_API_KEY",
+                "GOOGLE_SEARCH_ENGINE_ID",
+                "SUPABASE_PW",
+            ]
+            self.secrets = {}
+            for secret_name in secret_names:
+                name = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
+                response = client.access_secret_version(request={"name": name})
+                self.secrets[secret_name] = response.payload.data.decode("UTF-8")
+            logger.info("Successfully loaded secrets from GCP Secret Manager.")
+        except Exception as e:
+            logger.error(f"Failed to load secrets from GCP Secret Manager: {e}")
+            raise
 
     def _load_yaml_config(self):
         config_path = os.path.join(

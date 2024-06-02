@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
-from raggaeton.backend.src.api.endpoints.agent import init_agent  # Import agent
+from raggaeton.backend.src.api.endpoints.agent import init_agent
 from raggaeton.backend.src.utils.common import config_loader
 from contextlib import asynccontextmanager
 

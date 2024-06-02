@@ -7,16 +7,6 @@ On the roadmap: supercharge this with grid search over RAG params from document 
 # Demo
 \[placeholder]
 
-# Try it Out
-- Send a CURL request to `https://erniesg--raggaeton.modal.run/chat` like so:
-```bash
-curl -X POST "https://erniesg--raggaeton.modal.run/chat" \
-    -H "Content-Type: application/json" \
-    -d "{\"query\": \"tell me about honestbee\"}" \
-    --no-buffer \
-    --max-time 120
-```
-
 # How to Run Locally
 - Clone the repository
 - `cd` to the repository
@@ -31,6 +21,7 @@ make install
 
 # Implementation
 [Placeholder for diagram]
+
 This full-stack RAG project is structurally composed as above. We make use of `Vercel AI SDK`'s React Server Components and Streamable UI over `Gradio`/`Streamlit` for a more enjoyable UX.
 
 In terms of the main RAG engine, I went with LlamaIndex as it seemed to be more specialised for search and retrieval in particular and its abstractions are more useful than LangChain for development.
@@ -38,7 +29,8 @@ In terms of the main RAG engine, I went with LlamaIndex as it seemed to be more 
 Once the main framework has been decided, my scaffold was to break the project into a few major modules which will encapsulate all relevant logic within, the `raggaeton/backend/src/api/endpoints` folder contains the below core RAG logic:
 * `ingest.py` for ingesting source documents with metadata and persistence locally
 * `index.py` is responsible for index creation for documents for efficient retrieval
-* `chat.py`makes use of `agent.py` with `tools.py` to initialise our desired agent behaviour and instantiates a FastAPI app
+* `chat.py`makes use of `agent.py` with `tools.py` to initialise our desired ReActagent behaviour with tools and instantiates a FastAPI app <--- This is the one we're going with
+* `create_chat.py`is an implementation of a straightforward `chat_engine `setup with various embedding models
 
 Other supporting modules include:
 * `raggaeton/backend/scripts` folder contains the modal scripts ran to deploy this with scalable serverless resources such as downloading documents and preprocessing the HTML into markdown for easier LLM consumption
@@ -66,6 +58,7 @@ These key decisions and how they were derived are explained in greater detail be
 * `Alibaba-NLP/gte-large-en-v1.5`: 1024
 * `WhereIsAI/UAE-Large-V1`: 1024
 * `GritLM/GritLM-7B`: 4096
+
 The idea was also that these open source models would allow for fine-tuning of a custom embedding that best knows our documents. Unfortunately, the LlamaIndex Supabase vector store integration only supported up to 768 when I tested it so it seemed kinda pointless.
 
 That was when I decided to give `ColBERTv2` which seems more experimental and is not widely supported by all vector databases yet (it's only supported by Vespa and Qdrant has it on the roadmap) a try. Other people's experiments \[[1](https://www.linkedin.com/pulse/guidebook-state-of-the-art-embeddings-information-aapo-tanskanen-pc3mf/)]  and its use as a reranker gave me confidence that this will suit our needs.
@@ -77,6 +70,7 @@ Since so many points on an end-to-end RAG app is possible for optimisation and t
 - `embedding_model`: \[... any 3]
 - `dimensions`: \[512, 1024, 4096]
 - `llm`: \[... any 3]
+
 We will have 243 variations that we can run against a standard test set of questions with varying levels of difficulty, comparing latency and retrieval effectiveness, with tools such as `deepeval`. This will only be possible with a service like Modal.
 
 That is the desired end state, and we are part of the way there for reasons to do with the challenges I encountered along the way which I will describe next.
@@ -131,7 +125,28 @@ There were mental gymnastics I got entangled in such as: so if a router can be a
 
 These challenges are entirely to be expected of a field that is so young and moving so quickly that we just don't have settled building blocks or even a vocabulary, yet. In reality every company's implementation will have to be tailored to own use cases and constraints and I expect some common design patterns to emerge as more AI-native products find mass adoption. Life will be a lot easier then. But this build-it-to-test-it phase is incredibly fun too.
 
+## Deployment Woes
+All it took was packaging my app into Docker to make me miss Modal again. While most Modal deployments took less than 60s to finish, Docker is just so slow and it does not help at all that I am trying to build and pull images from behind a VPN in China at time of typing.
+
 # Areas for Improvement
+
+## Project Roadmap and Enhancements
+For the project, the following are key areas for further work:
+* Better integration with custom prompt
+While I customised a system prompt in `_prompts.md` and you can play with it by renaming it to `prompts.md`, I did not use it because the output displays the agent's internal processes (which I think will make for good streaming UI) but for the purpose of this demo, I stuck with the OpenAIAgent which thinks it's still 2023.
+
+* Deployment With a Fine-tuned Model for Routing
+In production, it might be meaningful to fine-tune a small and cheap model that answers straightforward queries, does routing and making parallel calls *very well* for an optimal user experience.
+
+* More Tools
+This then means that we can increase the number of tools available to the LLM, query rewriting, decomposition, calling on other data sources and so on.
+
+* Enrich and Enhance Datasets for RAG
+Speaking of datasets, I did not incorporate other data per se since LLMs are already trained on an entire Internet's worth of data. Also for Tech in Asia's posts, I kept running up against a 900 posts limit. Down the road, it is worth looking at enriching existing datasets for better LLM access, or tap into more local data sources.
+
+* Grid Search
+Parts of an experimentation engine is already set up, so this area is definitely ripe for an actual field test to find the best settings for our own purposes.
+
 ## Reverse Engineer from Human Evaluation
 There were a few times on this project that I got too carried away on exploring my own pedantic curiosity that I didn't end up using which were time taken away for checking off the dimensions of creativity, quality of prompts, reliability and good documentation fully. In retrospect, I should have better clarified the weightage and expectations to better ensure that what I deliver will meet expectations.
 
