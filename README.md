@@ -39,8 +39,9 @@ curl -X POST "http://127.0.0.1:8000/chat" -H "Content-Type: application/json" -d
 ```
 
 ### NOTE
-- The default agent used is OpenAIAgent which still thinks it's 2023... I kept it there as behaviour is more consistent.
-- You can try out the `TIA Bot` version by renaming `raggaeton/raggaeton/backend/src/config/_prompts.md` to `prompts.md` then restarting FastAPI. It's just that it "thinks" aloud and I haven't fixed the UI or why it doesn't complete its loops automatically in this mode, hence it was kept aside.
+- The default agent used is OpenAIAgent with custom prompts `raggaeton/raggaeton/backend/src/config/prompts.md` so the text response is rather funky. If it looks like it hasn't finished its train of thought, just say something to continue.
+- The first time you load this, it will take a while to start, index and fetch data for the first time so you might want to view the console to view progress.
+- You can rename `prompts.md` to `_prompts.md` then restart FastAPI to see default OpenAI agent behaviour (it still thinks it's 2013...).
 
 # Implementation
 ![Architecture diagram](https://github.com/erniesg/raggaeton/blob/master/raggaeton/public/archi.png?raw=true)
@@ -157,9 +158,9 @@ Maintaining the agent's state was a real challenge because it's non-serialisable
 
 ### Project Roadmap and Enhancements
 For the project, the following are key areas for further work:
-* Better integration with custom prompt
+* Better caching and integration with custom prompt
 
-While I customised a system prompt in `_prompts.md` and you can play with it by renaming it to `prompts.md`, I did not use it because the output displays the agent's internal processes (which I think will make for good streaming UI) but for the purpose of this demo, I stuck with the OpenAIAgent which thinks it's still 2023.
+While I customised a system prompt in `prompts.md` and you can play with it to see the model "think out loud" - it's definitely feasible to stream the intermediate responses in a much more interesting way. Also caching of frequent responses will probably help to speed things up a lot more in production (and save on costs too).
 
 * Deployment With a Fine-tuned Model for Routing
 
