@@ -34,8 +34,7 @@ uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 
 
 ### Sample `curl` Request
 - You can test the API with a sample `curl` request:
-```
-bash
+```bash
 curl -X POST "http://127.0.0.1:8000/chat" -H "Content-Type: application/json" -d "{\"query\": \"What are the top startups in Indonesia?\"}"
 ```
 
