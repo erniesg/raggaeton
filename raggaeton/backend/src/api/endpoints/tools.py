@@ -1,5 +1,4 @@
 import logging
-import google.api_core.exceptions
 from llama_index.core.tools.query_engine import QueryEngineTool
 from llama_index.core.query_engine.router_query_engine import RouterQueryEngine
 from llama_index.core.selectors.llm_selectors import LLMSingleSelector
@@ -8,10 +7,8 @@ from llama_index.tools.google import GoogleSearchToolSpec
 from llama_index.llms.openai import OpenAI
 from raggaeton.backend.src.utils.gcs import save_data, create_bucket
 from raggaeton.backend.src.utils.common import config_loader, base_dir
-from raggaeton.backend.src.utils.utils import (
-    create_mock_document,
-    create_indices,
-)
+from raggaeton.backend.src.utils.utils import create_mock_document, create_indices
+from raggaeton.backend.src.utils.error_handler import DataError, ConfigurationError
 
 import os
 
@@ -54,46 +51,30 @@ def create_rag_query_tool(
 
     if index_path:
         logger.info(f"Index path provided: {index_path}")
-        # Load the index from the specified path
         if not os.path.exists(index_path):
-            raise FileNotFoundError(f"Index path {index_path} does not exist")
+            raise DataError(f"Index path {index_path} does not exist")
         logger.info(f"Loading RAGatouilleRetrieverPack from {index_path}")
-        try:
-            ragatouille_pack = RAGatouilleRetrieverPack(
-                docs,
-                llm=OpenAI(model=model_name),
-                index_name=index_name,
-                top_k=top_k,
-                index_path=index_path,
-            )
-        except Exception as e:
-            logger.error(f"Failed to initialize RAGatouilleRetrieverPack: {e}")
-            raise
+        ragatouille_pack = RAGatouilleRetrieverPack(
+            docs,
+            llm=OpenAI(model=model_name),
+            index_name=index_name,
+            top_k=top_k,
+            index_path=index_path,
+        )
     else:
         logger.info("No index path provided, creating new RAGatouilleRetrieverPack")
-        try:
-            ragatouille_pack = RAGatouilleRetrieverPack(
-                docs, llm=OpenAI(model=model_name), index_name=index_name, top_k=top_k
-            )
-            logger.info("Saving index data to GCS...")
-            bucket_name = config_loader.get("gcs.bucket_name")
-            create_bucket(bucket_name)
-            save_data(local_path=os.path.join(base_dir, ".ragatouille/colbert/indexes"))
-            logger.info("Index data saved to GCS successfully.")
-        except google.api_core.exceptions.NotFound as e:
-            logger.error(f"GCS bucket not found: {e}")
-            raise
-        except Exception as e:
-            logger.error(f"Failed to save data to GCS: {e}")
-            raise
-    try:
-        rag_query = ragatouille_pack.get_modules()["query_engine"]
-        logger.info(f"Ragatouille indexed at: {ragatouille_pack.index_path}")
-    except Exception as e:
-        logger.error(f"Failed to get query engine from RAGatouilleRetrieverPack: {e}")
-        raise
+        ragatouille_pack = RAGatouilleRetrieverPack(
+            docs, llm=OpenAI(model=model_name), index_name=index_name, top_k=top_k
+        )
+        logger.info("Saving index data to GCS...")
+        bucket_name = config_loader.get_config().get("gcs", {}).get("bucket_name")
+        create_bucket(bucket_name)
+        save_data(local_path=os.path.join(base_dir, ".ragatouille/colbert/indexes"))
+        logger.info("Index data saved to GCS successfully.")
 
-    # TODO: persist and remember index location for subsequent loading
+    rag_query = ragatouille_pack.get_modules()["query_engine"]
+    logger.info(f"Ragatouille indexed at: {ragatouille_pack.index_path}")
+
     return QueryEngineTool.from_defaults(
         query_engine=rag_query,
         name="colbert_query_tool",
@@ -102,19 +83,6 @@ def create_rag_query_tool(
 
 
 def create_tools(*tool_names, **kwargs):
-    """
-    Create a list of tools based on the provided tool names.
-
-    Args:
-        *tool_names (str): Names of the tools to create.
-        **kwargs: Additional arguments required for tool creation.
-
-    Returns:
-        list: List of created tools.
-
-    Usage:
-        tools = create_tools("search", "rag", docs=docs)
-    """
     tools = []
     for tool_name in tool_names:
         if tool_name == "vector":
@@ -122,13 +90,17 @@ def create_tools(*tool_names, **kwargs):
             if vector_index:
                 tools.append(create_vector_tool(vector_index))
             else:
-                raise ValueError("vector_index is required for creating vector tool")
+                raise ConfigurationError(
+                    "vector_index is required for creating vector tool"
+                )
         elif tool_name == "summary":
             summary_index = kwargs.get("summary_index")
             if summary_index:
                 tools.append(create_summary_tool(summary_index))
             else:
-                raise ValueError("summary_index is required for creating summary tool")
+                raise ConfigurationError(
+                    "summary_index is required for creating summary tool"
+                )
         elif tool_name == "search":
             tools.append(create_google_search_tool())
         elif tool_name == "rag":
@@ -136,29 +108,22 @@ def create_tools(*tool_names, **kwargs):
             if docs:
                 tools.append(create_rag_query_tool(docs))
             else:
-                raise ValueError("docs are required for creating RAG query tool")
+                raise ConfigurationError(
+                    "docs are required for creating RAG query tool"
+                )
         else:
-            raise ValueError(f"Unsupported tool name: {tool_name}")
+            raise ConfigurationError(f"Unsupported tool name: {tool_name}")
     return tools
 
 
 def create_router_query_engine(vector_store, documents):
-    """
-    Create a Router Query Engine.
-
-    Args:
-        vector_store: The vector store to use.
-        documents: The documents to use.
-
-    Returns:
-        tuple: The created Router Query Engine, vector index, and summary index.
-
-    Usage:
-        router_query_engine, vector_index, summary_index = create_router_query_engine(vector_store, documents)
-    """
     vector_index, summary_index = create_indices(vector_store, documents)
     summary_tool, vector_tool, google_search_tool = create_tools(
-        vector_index, summary_index
+        "summary",
+        "vector",
+        "search",
+        vector_index=vector_index,
+        summary_index=summary_index,
     )
 
     router_query_engine = RouterQueryEngine(
@@ -174,11 +139,8 @@ def create_router_query_engine(vector_store, documents):
 def load_rag_query_tool(index_path=None, docs=None):
     if docs is None:
         logger.debug("No documents are passed in, using a mock document")
-
-        # Use a mock document if none are provided
         docs = [create_mock_document()]
 
-    # Default index path
     if index_path is None:
         index_path = os.path.join(
             base_dir, "raggaeton/raggaeton/.ragatouille/colbert/indexes/my_index"

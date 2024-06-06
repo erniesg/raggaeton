@@ -79,12 +79,8 @@ docker-build-backend-dev:
 docker-run-backend:
 	@echo "Running Docker container for backend ($${ENVIRONMENT})..."
 	docker run -it --rm -p 8000:8000 --env-file $${ENV_FILE} -v $${VOLUME}:/app/.ragatouille/colbert/indexes raggaeton-tia-backend:$${ENVIRONMENT} /bin/bash -c "\
-		echo 'Environment Variables:'; \
-		printenv; \
 		echo 'Contents of /app/.ragatouille/colbert/indexes:'; \
 		ls -la /app/.ragatouille/colbert/indexes; \
-		echo 'Contents of .env file:'; \
-		cat /app/.env; \
 		echo 'Checking if raggaeton/backend/src/config/ragatouille_pack exists:'; \
 		ls -la /app/raggaeton/backend/src/config/ragatouille_pack || echo 'ragatouille_pack directory not found'; \
 		uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug"
@@ -92,12 +88,8 @@ docker-run-backend:
 docker-run-backend-dev:
 	@echo "Running Docker container for backend (dev)..."
 	docker run -it --rm -p 8000:8000 --env-file $${ENV_FILE} -v $${VOLUME}:/app/.ragatouille/colbert/indexes raggaeton-tia-backend:dev /bin/bash -c "\
-		echo 'Environment Variables:'; \
-		printenv; \
 		echo 'Contents of /app/.ragatouille/colbert/indexes:'; \
 		ls -la /app/.ragatouille/colbert/indexes; \
-		echo 'Contents of .env file:'; \
-		cat /app/.env; \
 		uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug"
 
 docker-run-macos:

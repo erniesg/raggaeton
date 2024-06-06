@@ -11,6 +11,7 @@ from raggaeton.backend.src.api.endpoints.tools import (
 )
 from raggaeton.backend.src.api.endpoints.index import load_documents
 from raggaeton.backend.src.api.endpoints.tools import load_rag_query_tool
+from raggaeton.backend.src.utils.error_handler import ConfigurationError
 
 logger = logging.getLogger(__name__)
 agent = None
@@ -21,7 +22,6 @@ def get_custom_prompt() -> str:
     if os.path.exists(prompt_path):
         with open(prompt_path, "r") as file:
             prompt = file.read()
-            # Replace placeholder with the actual date
             today_date = datetime.now().strftime("%Y-%m-%d")
             prompt = prompt.replace("{insert today's date here}", today_date)
             logger.debug(f"Custom prompt loaded: {prompt}")
@@ -44,7 +44,7 @@ def init_llm(model_name, params, api_key_env):
 
         Settings.llm = Anthropic(model=model_name, **params)
     else:
-        raise ValueError(f"Unsupported LLM: {model_name}")
+        raise ConfigurationError(f"Unsupported LLM: {model_name}")
 
     os.environ[api_key_env] = config_loader.get_secret(api_key_env)
 
@@ -58,27 +58,11 @@ def create_agent(
     api_key_env=None,
     verbose=True,
 ):
-    """
-    Create an agent with the specified type and tools.
-
-    Args:
-        agent_type (str): The type of agent to create (e.g., "openai", "react").
-        tools (list): List of tools to be used by the agent.
-        config (dict, optional): Configuration dictionary. If not provided, load the default config.
-        model_name (str, optional): The name of the model to initialize. Overrides config if provided.
-        params (dict, optional): Parameters for the model. Overrides config if provided.
-        api_key_env (str, optional): The environment variable for the API key. Overrides config if provided.
-        verbose (bool, optional): Whether to enable verbose logging. Default is False.
-
-    Returns:
-        Agent: The created agent.
-    """
     global agent
 
     if config is None:
         config = load_config()
 
-    # Extract model configuration from the config if not provided
     if model_name is None or params is None or api_key_env is None:
         llm_config = config["llm"]["models"][0]
         model_name = model_name or llm_config["model_name"]
@@ -100,7 +84,7 @@ def create_agent(
             tools, system_prompt=custom_prompt, verbose=verbose
         )
     else:
-        raise ValueError(f"Unsupported agent type: {agent_type}")
+        raise ConfigurationError(f"Unsupported agent type: {agent_type}")
     logger.debug(f"Agent created with custom prompt: {custom_prompt}")
 
     return agent
@@ -118,17 +102,13 @@ def init_agent(index_path=None):
         google_search_tool = create_google_search_tool()
         logger.debug("Created Google search tool")
 
-        # Use the default index path if none is provided
         if index_path is None:
             index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
 
         logger.debug(f"Using index path: {index_path}")
 
-        # Check if the index path exists
         if os.path.exists(index_path):
             logger.debug(f"Index path {index_path} exists. Loading RAG query tool.")
-
-            # Load the RAG query tool with the existing index
             rag_query_tool = load_rag_query_tool(index_path=index_path)
             tools = [google_search_tool, rag_query_tool]
         else:
@@ -137,15 +117,9 @@ def init_agent(index_path=None):
             )
             documents = load_documents()
             logger.debug(f"Loaded documents: {documents}")
-
             tools = [google_search_tool, create_rag_query_tool(docs=documents)]
 
-        # Initialize the agent with pre-loaded tools
-        agent = create_agent(
-            agent_type="openai",
-            tools=tools,
-            config=config,
-        )
+        agent = create_agent(agent_type="openai", tools=tools, config=config)
         logger.info(f"Agent initialized successfully with type: {type(agent)}")
     else:
         logger.info("Agent is already initialized")
@@ -163,22 +137,17 @@ def load_agent(index_path=None):
         google_search_tool = create_google_search_tool()
 
         if index_path is None:
-            # Use the default index path
             index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
 
         logger.debug(f"Using index path: {index_path}")
 
-        # Check if the index path exists
         if not os.path.exists(index_path):
             logger.warning(
                 f"Index path {index_path} does not exist. Initializing agent with default configuration."
             )
             return init_agent()
 
-        # Create the RAG query tool with the loaded index
         rag_query_tool = load_rag_query_tool(index_path=index_path)
-
-        # Initialize the agent with pre-loaded tools
         agent = create_agent(
             agent_type="openai",
             tools=[google_search_tool, rag_query_tool],

@@ -3,16 +3,25 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from raggaeton.backend.src.api.endpoints.agent import init_agent
 from raggaeton.backend.src.utils.common import config_loader
+from raggaeton.backend.src.utils.error_handler import handle_exception
 from contextlib import asynccontextmanager
 import os
 
 config_loader._setup_logging()
 logger = logging.getLogger(__name__)
-# Create FastAPI app
 app = FastAPI()
 
 
-# Create FastAPI app
+# Middleware to catch and handle exceptions globally
+@app.middleware("http")
+async def catch_exceptions_middleware(request: Request, call_next):
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as exc:
+        return handle_exception(exc)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Lifespan: Initializing components...")
@@ -21,7 +30,6 @@ async def lifespan(app: FastAPI):
     index_path = "/app/.ragatouille/colbert/indexes/my_index"
     if os.path.exists(index_path):
         logger.info(f"Index path exists: {index_path}")
-        logger.info(f"Contents: {os.listdir(index_path)}")
     else:
         logger.error(f"Index path does not exist: {index_path}")
 
