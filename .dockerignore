@@ -16,3 +16,4 @@ frontend/node_modules/
 node_modules
 .env_bu
 .ragatouille_bu/
+*.mp4

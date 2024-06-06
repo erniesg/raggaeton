@@ -1,9 +1,12 @@
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
-from raggaeton.backend.src.api.endpoints.agent import init_agent
+from raggaeton.backend.src.api.endpoints.agent import get_agent
 from raggaeton.backend.src.utils.common import config_loader
-from raggaeton.backend.src.utils.error_handler import handle_exception
+from raggaeton.backend.src.utils.error_handler import (
+    error_handling_context,
+    InitializationError,
+)
 from contextlib import asynccontextmanager
 import os
 
@@ -15,11 +18,9 @@ app = FastAPI()
 # Middleware to catch and handle exceptions globally
 @app.middleware("http")
 async def catch_exceptions_middleware(request: Request, call_next):
-    try:
+    with error_handling_context():
         response = await call_next(request)
         return response
-    except Exception as exc:
-        return handle_exception(exc)
 
 
 @asynccontextmanager
@@ -33,18 +34,14 @@ async def lifespan(app: FastAPI):
     else:
         logger.error(f"Index path does not exist: {index_path}")
 
-    try:
-        # Load the agent with the default index path
-        logger.info("Calling init agent...")
+    # Load the agent with the default index path
+    logger.info("Calling get_agent...")
 
-        agent = init_agent()
-        if agent is None:
-            logger.error("Agent loading failed. Agent is None.")
-        else:
-            logger.info(f"Agent loaded successfully: {type(agent)}")
-    except Exception as e:
-        logger.error(f"Exception during agent initialization: {e}")
-        agent = None
+    agent = get_agent(index_path=index_path)
+    if agent is None:
+        raise InitializationError("Agent loading failed. Agent is None.")
+    else:
+        logger.info(f"Agent loaded successfully: {type(agent)}")
 
     app.state.agent = agent  # Store the agent in the app state
     logger.info("Lifespan: Components initialized successfully")

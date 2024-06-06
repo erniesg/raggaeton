@@ -4,7 +4,7 @@
 ENVIRONMENT ?= prod
 PLATFORM ?= linux/amd64
 ENV_FILE ?= .env
-VOLUME ?= /Users/erniesg/code/erniesg/raggaeton/.ragatouille/colbert/indexes
+VOLUME ?= .ragatouille/colbert/indexes
 
 # Setup GCP credentials and project ID
 setup:
@@ -52,7 +52,7 @@ setup:
 
 # Backend Docker build
 docker-build-backend:
-	@echo "Building Docker image for backend ($${ENVIRONMENT})..."
+	@echo "Building Docker image for backend (${ENVIRONMENT})..."
 	@if ! docker buildx inspect mybuilder &> /dev/null; then \
 		echo "Creating new buildx builder instance..."; \
 		docker buildx create --name mybuilder --use; \
@@ -61,7 +61,7 @@ docker-build-backend:
 	fi
 	docker buildx inspect --bootstrap
 	@echo "Running docker buildx build command..."
-	docker buildx build --platform $${PLATFORM} --build-arg ENVIRONMENT=$${ENVIRONMENT} -t raggaeton-tia-backend:$${ENVIRONMENT} --load .
+	docker buildx build --platform ${PLATFORM} --build-arg ENVIRONMENT=${ENVIRONMENT} -t raggaeton-tia-backend:${ENVIRONMENT} --load .
 
 # Backend Docker build for development
 docker-build-backend-dev:
@@ -74,11 +74,11 @@ docker-build-backend-dev:
 	fi
 	docker buildx inspect --bootstrap
 	@echo "Running docker buildx build command..."
-	docker buildx build --platform $${PLATFORM} --build-arg ENVIRONMENT=dev -t raggaeton-tia-backend:dev --load .
+	docker buildx build --platform ${PLATFORM} --build-arg ENVIRONMENT=dev -t raggaeton-tia-backend:dev --load .
 
 docker-run-backend:
 	@echo "Running Docker container for backend ($${ENVIRONMENT})..."
-	docker run -it --rm -p 8000:8000 --env-file $${ENV_FILE} -v $${VOLUME}:/app/.ragatouille/colbert/indexes raggaeton-tia-backend:$${ENVIRONMENT} /bin/bash -c "\
+	docker run -it --rm -p 8000:8000 $$( [ -n "$${ENV_FILE}" ] && echo "--env-file $${ENV_FILE}" ) -e ENVIRONMENT=$${ENVIRONMENT} $$( [ -n "$${VOLUME}" ] && echo "-v $$(pwd)/$${VOLUME}:/app/.ragatouille/colbert/indexes" ) raggaeton-tia-backend:$${ENVIRONMENT} /bin/bash -c "\
 		echo 'Contents of /app/.ragatouille/colbert/indexes:'; \
 		ls -la /app/.ragatouille/colbert/indexes; \
 		echo 'Checking if raggaeton/backend/src/config/ragatouille_pack exists:'; \
@@ -87,11 +87,10 @@ docker-run-backend:
 
 docker-run-backend-dev:
 	@echo "Running Docker container for backend (dev)..."
-	docker run -it --rm -p 8000:8000 --env-file $${ENV_FILE} -v $${VOLUME}:/app/.ragatouille/colbert/indexes raggaeton-tia-backend:dev /bin/bash -c "\
+	docker run -it --rm -p 8000:8000 $$( [ -n "$${ENV_FILE}" ] && echo "--env-file $${ENV_FILE}" ) -e ENVIRONMENT=dev $$( [ -n "$${VOLUME}" ] && echo "-v $$(pwd)/$${VOLUME}:/app/.ragatouille/colbert/indexes" ) raggaeton-tia-backend:dev /bin/bash -c "\
 		echo 'Contents of /app/.ragatouille/colbert/indexes:'; \
 		ls -la /app/.ragatouille/colbert/indexes; \
 		uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug"
-
 docker-run-macos:
 	@echo "Running Docker containers for macOS..."
 	PLATFORM=linux/arm64 make docker-run-backend ENVIRONMENT=dev ENV_FILE=$(ENV_FILE) VOLUME=$(VOLUME)
@@ -146,3 +145,13 @@ docker-enter-macos-dev:
 	else \
 		echo "No running container found for raggaeton-tia-backend:dev"; \
 	fi
+
+# Combined Docker build and run for macOS (prod)
+docker-build-and-run-backend-macos:
+	PLATFORM=linux/arm64 make docker-build-backend ENVIRONMENT=prod
+	PLATFORM=linux/arm64 make docker-run-backend ENVIRONMENT=prod
+
+# Combined Docker build and run for macOS (dev)
+docker-build-and-run-backend-macos-dev:
+	PLATFORM=linux/arm64 make docker-build-backend-dev
+	PLATFORM=linux/arm64 make docker-run-backend-dev

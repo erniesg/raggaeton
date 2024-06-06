@@ -12,9 +12,11 @@ from raggaeton.backend.src.api.endpoints.tools import (
 from raggaeton.backend.src.api.endpoints.index import load_documents
 from raggaeton.backend.src.api.endpoints.tools import load_rag_query_tool
 from raggaeton.backend.src.utils.error_handler import ConfigurationError
+from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 agent = None
+cached_agents: Dict[str, Any] = {}
 
 
 def get_custom_prompt() -> str:
@@ -90,70 +92,76 @@ def create_agent(
     return agent
 
 
-def init_agent(index_path=None):
+def init_agent(index_path=None, **kwargs):
     logger.debug("init_agent called")
 
     global agent
-    if agent is None:
-        logger.info("Initializing agent components...")
-        config = load_config()
-        logger.debug(f"Loaded config: {config}")
 
-        google_search_tool = create_google_search_tool()
-        logger.debug("Created Google search tool")
+    # Check if an agent with the given configuration exists in the cache
+    cached_agent = check_agent_state(index_path, **kwargs)
+    if cached_agent:
+        logger.info("Using cached agent")
+        return cached_agent
 
-        if index_path is None:
-            index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
+    logger.info("Initializing agent components...")
+    config = load_config()
+    logger.debug(f"Loaded config: {config}")
 
-        logger.debug(f"Using index path: {index_path}")
+    google_search_tool = create_google_search_tool()
+    logger.debug("Created Google search tool")
 
-        if os.path.exists(index_path):
-            logger.debug(f"Index path {index_path} exists. Loading RAG query tool.")
-            rag_query_tool = load_rag_query_tool(index_path=index_path)
-            tools = [google_search_tool, rag_query_tool]
-        else:
-            logger.warning(
-                f"Index path {index_path} does not exist. Initializing agent with default configuration."
-            )
-            documents = load_documents()
-            logger.debug(f"Loaded documents: {documents}")
-            tools = [google_search_tool, create_rag_query_tool(docs=documents)]
+    if index_path is None:
+        index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
 
-        agent = create_agent(agent_type="openai", tools=tools, config=config)
-        logger.info(f"Agent initialized successfully with type: {type(agent)}")
+    logger.debug(f"Using index path: {index_path}")
+
+    if os.path.exists(index_path):
+        logger.debug(f"Index path {index_path} exists. Loading RAG query tool.")
+        rag_query_tool = load_rag_query_tool(index_path=index_path)
+        tools = [google_search_tool, rag_query_tool]
     else:
-        logger.info("Agent is already initialized")
+        logger.warning(
+            f"Index path {index_path} does not exist. Initializing agent with default configuration."
+        )
+        documents = load_documents()
+        logger.debug(f"Loaded documents: {documents}")
+        tools = [google_search_tool, create_rag_query_tool(docs=documents)]
+
+    agent = create_agent(agent_type="openai", tools=tools, config=config)
+    logger.info(f"Agent initialized successfully with type: {type(agent)}")
+
+    # Store the initialized agent in the cache
+    cached_agents[f"{index_path}_{kwargs}"] = agent
+
     return agent
 
 
-def load_agent(index_path=None):
-    logger.debug("load_agent called")
+def check_agent_state(index_path: str, **kwargs) -> Optional[Any]:
+    config_key = f"{index_path}_{kwargs}"
 
-    global agent
-    if agent is None:
-        logger.info("Loading agent components...")
-        config = load_config()
-
-        google_search_tool = create_google_search_tool()
-
-        if index_path is None:
-            index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
-
-        logger.debug(f"Using index path: {index_path}")
-
-        if not os.path.exists(index_path):
-            logger.warning(
-                f"Index path {index_path} does not exist. Initializing agent with default configuration."
-            )
-            return init_agent()
-
-        rag_query_tool = load_rag_query_tool(index_path=index_path)
-        agent = create_agent(
-            agent_type="openai",
-            tools=[google_search_tool, rag_query_tool],
-            config=config,
-        )
-        logger.info(f"Agent loaded successfully with type: {type(agent)}")
+    if config_key in cached_agents:
+        logger.info(f"Found cached agent for configuration: {config_key}")
+        return cached_agents[config_key]
     else:
-        logger.info("Agent is already loaded")
+        logger.info(f"No cached agent found for configuration: {config_key}")
+        return None
+
+
+def get_agent(index_path=None, **kwargs):
+    logger.debug("get_agent called")
+
+    # Check if an agent with the given configuration exists in the cache
+    cached_agent = check_agent_state(index_path, **kwargs)
+    if cached_agent:
+        logger.info("Using cached agent")
+        return cached_agent
+
+    # Initialize a new agent if not found in the cache
+    agent = init_agent(index_path, **kwargs)
+
+    # Store the initialized agent in the cache
+    config_key = f"{index_path}_{kwargs}"
+    cached_agents[config_key] = agent
+
+    logger.info(f"Agent initialized and cached with configuration: {config_key}")
     return agent

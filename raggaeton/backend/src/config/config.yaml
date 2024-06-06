@@ -46,9 +46,14 @@ llm:
       api_key_env: "CLAUDE_API_KEY"
 
 logging:
-  level: "DEBUG"
-  file: "log/app.log"  # Relative path from project root, leave empty to not save
-  enable_console: true
+  prod:
+    level: "INFO"
+    file: "log/app_prod.log"
+    enable_console: false
+  dev:
+    level: "DEBUG"
+    file: "log/app_dev.log"
+    enable_console: true
 
 gcs:
   bucket_name: "raggaeton"

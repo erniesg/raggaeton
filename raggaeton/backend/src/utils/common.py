@@ -116,7 +116,8 @@ class ConfigLoader:
             self.prompts = ""
 
     def _setup_logging(self):
-        logging_config = self.config.get("logging", {})
+        environment = os.getenv("ENVIRONMENT", "prod")
+        logging_config = self.config.get("logging", {}).get(environment, {})
         log_level = logging_config.get("level", "INFO").upper()
         log_file = logging_config.get("file", "")
         enable_console = logging_config.get("enable_console", True)
