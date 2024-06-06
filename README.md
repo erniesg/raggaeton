@@ -17,6 +17,10 @@ It's thinking out loud because the custom prompt made it so, the default system 
 - Clone the repository
 - `cd` to the repository
 - Recommended Python version: `3.10.6`
+- You'll need `git` executable in your environment, check with the following
+```bash
+git --version
+```
 - Run the following command to install dependencies
 ```bash
 pip install -r requirements.txt
@@ -61,8 +65,8 @@ In terms of the main RAG engine, I went with LlamaIndex as it seemed to be more 
 Once the main framework has been decided, my scaffold was to break the project into a few major modules which will encapsulate all relevant logic within, the `raggaeton/backend/src/api/endpoints` folder contains the below core RAG logic:
 * `ingest.py` for ingesting source documents with metadata and persistence locally
 * `index.py` is responsible for index creation for documents for efficient retrieval
-* `chat.py`makes use of `agent.py` with `tools.py` to initialise our desired ReActagent behaviour with tools and instantiates a FastAPI app <--- This is the one we're going with
-* `create_chat.py`is an implementation of a straightforward `chat_engine `setup with various embedding models
+* `chat.py`makes use of `agent.py` with `tools.py` to initialise our desired ReAct agent behaviour with tools and instantiates a FastAPI app <--- This is the one we're going with
+* `create_chat.py`is an implementation of a straightforward `chat_engine` setup with various embedding models
 
 Other supporting modules include:
 * `raggaeton/backend/scripts` folder contains the modal scripts ran to deploy this with scalable serverless resources such as downloading documents and preprocessing the HTML into markdown for easier LLM consumption
