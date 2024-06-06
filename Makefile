@@ -1,4 +1,10 @@
-.PHONY: setup docker-pull docker-build-backend docker-build-frontend docker-run-backend docker-run-frontend docker-build docker-run docker-tag docker-push docker-deploy
+.PHONY: setup docker-build-backend docker-build-backend-dev docker-run-backend docker-run-backend-dev docker-build-macos docker-run-macos docker-enter-backend docker-enter-backend-dev docker-build-macos-dev docker-run-macos-dev docker-enter-macos-dev
+
+# Default values
+ENVIRONMENT ?= prod
+PLATFORM ?= linux/amd64
+ENV_FILE ?= .env
+VOLUME ?= /Users/erniesg/code/erniesg/raggaeton/.ragatouille/colbert/indexes
 
 # Setup GCP credentials and project ID
 setup:
@@ -26,7 +32,7 @@ setup:
 	@if ! command -v gcloud &> /dev/null; then \
 		echo "gcloud could not be found. Do you want to install it? (y/n)"; \
 		read install_gcloud; \
-		if [ "$$install_gcloud" = "y" ]; then \
+		if [ "$$install_gcloud" = "y"; then \
 			curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz; \
 			tar -xf google-cloud-sdk-367.0.0-linux-x86_64.tar.gz; \
 			./google-cloud-sdk/install.sh; \
@@ -44,53 +50,107 @@ setup:
 	echo "GCP_PROJECT_ID=$$gcp_project_id" >> .env; \
 	echo "Environment variables set for backend."
 
-# Pull Docker images
-docker-pull:
-	@echo "Pulling Docker images..."
-	docker pull raggaeton-tia-backend:latest
-	docker pull raggaeton-tia-frontend:latest
-
-# Backend Docker build for multiple platforms
+# Backend Docker build
 docker-build-backend:
-	@echo "Building Docker image for backend..."
-	docker buildx create --name mybuilder --use || true
+	@echo "Building Docker image for backend ($${ENVIRONMENT})..."
+	@if ! docker buildx inspect mybuilder &> /dev/null; then \
+		echo "Creating new buildx builder instance..."; \
+		docker buildx create --name mybuilder --use; \
+	else \
+		echo "Using existing buildx builder instance..."; \
+	fi
 	docker buildx inspect --bootstrap
-	docker buildx build --no-cache --platform linux/amd64,linux/arm64 -t raggaeton-tia-backend:latest --progress=plain .
+	@echo "Running docker buildx build command..."
+	docker buildx build --platform $${PLATFORM} --build-arg ENVIRONMENT=$${ENVIRONMENT} -t raggaeton-tia-backend:$${ENVIRONMENT} --load .
 
-# Frontend Docker build
-docker-build-frontend:
-	@echo "Building Docker image for frontend..."
-	cd /Users/erniesg/code/erniesg/raggaeton-frontend && docker build --no-cache -t raggaeton-tia-frontend -f Dockerfile .
+# Backend Docker build for development
+docker-build-backend-dev:
+	@echo "Building Docker image for backend (dev)..."
+	@if ! docker buildx inspect mybuilder &> /dev/null; then \
+		echo "Creating new buildx builder instance..."; \
+		docker buildx create --name mybuilder --use; \
+	else \
+		echo "Using existing buildx builder instance..."; \
+	fi
+	docker buildx inspect --bootstrap
+	@echo "Running docker buildx build command..."
+	docker buildx build --platform $${PLATFORM} --build-arg ENVIRONMENT=dev -t raggaeton-tia-backend:dev --load .
 
-# Combined Docker build
-docker-build: docker-build-backend docker-build-frontend
-
-# Backend Docker run
 docker-run-backend:
-	@echo "Running Docker container for backend..."
-	docker run --env-file .env -v $(shell pwd):/raggaeton -p 8000:8000 raggaeton-tia-backend:latest
+	@echo "Running Docker container for backend ($${ENVIRONMENT})..."
+	docker run -it --rm -p 8000:8000 --env-file $${ENV_FILE} -v $${VOLUME}:/app/.ragatouille/colbert/indexes raggaeton-tia-backend:$${ENVIRONMENT} /bin/bash -c "\
+		echo 'Environment Variables:'; \
+		printenv; \
+		echo 'Contents of /app/.ragatouille/colbert/indexes:'; \
+		ls -la /app/.ragatouille/colbert/indexes; \
+		echo 'Contents of .env file:'; \
+		cat /app/.env; \
+		echo 'Checking if raggaeton/backend/src/config/ragatouille_pack exists:'; \
+		ls -la /app/raggaeton/backend/src/config/ragatouille_pack || echo 'ragatouille_pack directory not found'; \
+		uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug"
 
-# Frontend Docker run
-docker-run-frontend:
-	@echo "Running Docker container for frontend..."
-	docker run -p 3000:3000 raggaeton-tia-frontend
+docker-run-backend-dev:
+	@echo "Running Docker container for backend (dev)..."
+	docker run -it --rm -p 8000:8000 --env-file $${ENV_FILE} -v $${VOLUME}:/app/.ragatouille/colbert/indexes raggaeton-tia-backend:dev /bin/bash -c "\
+		echo 'Environment Variables:'; \
+		printenv; \
+		echo 'Contents of /app/.ragatouille/colbert/indexes:'; \
+		ls -la /app/.ragatouille/colbert/indexes; \
+		echo 'Contents of .env file:'; \
+		cat /app/.env; \
+		uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug"
 
-# Combined Docker run using Docker Compose
-docker-run:
-	@echo "Starting services with Docker Compose..."
-	docker-compose up --build
+docker-run-macos:
+	@echo "Running Docker containers for macOS..."
+	PLATFORM=linux/arm64 make docker-run-backend ENVIRONMENT=dev ENV_FILE=$(ENV_FILE) VOLUME=$(VOLUME)
 
-# Tag Docker images for GCR
-docker-tag:
-	@echo "Tagging Docker images for GCR..."
-	docker tag raggaeton-tia-backend:latest gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:latest
-	docker tag raggaeton-tia-frontend:latest gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest
+docker-run-macos-dev:
+	@echo "Running Docker containers for macOS development..."
+	PLATFORM=linux/arm64 make docker-run-backend-dev ENV_FILE=$(ENV_FILE) VOLUME=$(VOLUME)
 
-# Push Docker images to GCR
-docker-push:
-	@echo "Pushing Docker images to GCR..."
-	docker push gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:latest
-	docker push gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest
+# Combined Docker build and run
+docker-build-and-run-backend: docker-build-backend docker-run-backend
 
-# Combined tag and push
-docker-deploy: docker-tag docker-push
+# Combined Docker build and run for development
+docker-build-and-run-backend-dev: docker-build-backend-dev docker-run-backend-dev
+
+# Build Docker images for macOS
+docker-build-macos:
+	@echo "Building Docker images for macOS..."
+	PLATFORM=linux/arm64 make docker-build-backend ENVIRONMENT=prod
+	PLATFORM=linux/arm64 make docker-build-backend ENVIRONMENT=dev
+
+# Build Docker images for macOS development
+docker-build-macos-dev:
+	@echo "Building Docker images for macOS development..."
+	PLATFORM=linux/arm64 make docker-build-backend-dev
+
+# Enter the running Docker container
+docker-enter-backend:
+	@echo "Entering the running Docker container for backend ($${ENVIRONMENT})..."
+	@container_id=$$(docker ps -q -f "ancestor=raggaeton-tia-backend:$${ENVIRONMENT}"); \
+	if [ -n "$$container_id" ]; then \
+		docker exec -it $$container_id /bin/bash; \
+	else \
+		echo "No running container found for raggaeton-tia-backend:$${ENVIRONMENT}"; \
+	fi
+
+# Enter the running Docker container for development
+docker-enter-backend-dev:
+	@echo "Entering the running Docker container for backend (dev)..."
+	@container_id=$$(docker ps -q -f "ancestor=raggaeton-tia-backend:dev"); \
+	if [ -n "$$container_id" ]; then \
+		docker exec -it $$container_id /bin/bash; \
+	else \
+		echo "No running container found for raggaeton-tia-backend:dev"; \
+	fi
+
+# Enter the running Docker container for macOS development
+docker-enter-macos-dev:
+	@echo "Entering the running Docker container for macOS development..."
+	@container_id=$$(docker ps -q -f "ancestor=raggaeton-tia-backend:dev"); \
+	if [ -n "$$container_id" ]; then \
+		docker exec -it $$container_id /bin/bash; \
+	else \
+		echo "No running container found for raggaeton-tia-backend:dev"; \
+	fi

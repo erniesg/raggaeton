@@ -3,6 +3,7 @@ import yaml
 import logging
 from dotenv import load_dotenv
 from google.cloud import secretmanager
+import logging.config
 
 
 def find_project_root(current_path):

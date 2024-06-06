@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from raggaeton.backend.src.api.endpoints.agent import init_agent
 from raggaeton.backend.src.utils.common import config_loader
 from contextlib import asynccontextmanager
+import os
 
 config_loader._setup_logging()
 logger = logging.getLogger(__name__)
@@ -16,12 +17,26 @@ app = FastAPI()
 async def lifespan(app: FastAPI):
     logger.info("Lifespan: Initializing components...")
 
-    # Load the agent with the default index path
-    agent = init_agent()
-    if agent is None:
-        logger.error("Agent loading failed. Agent is None.")
+    # Log contents of the index directory
+    index_path = "/app/.ragatouille/colbert/indexes/my_index"
+    if os.path.exists(index_path):
+        logger.info(f"Index path exists: {index_path}")
+        logger.info(f"Contents: {os.listdir(index_path)}")
     else:
-        logger.info(f"Agent loaded successfully: {type(agent)}")
+        logger.error(f"Index path does not exist: {index_path}")
+
+    try:
+        # Load the agent with the default index path
+        logger.info("Calling init agent...")
+
+        agent = init_agent()
+        if agent is None:
+            logger.error("Agent loading failed. Agent is None.")
+        else:
+            logger.info(f"Agent loaded successfully: {type(agent)}")
+    except Exception as e:
+        logger.error(f"Exception during agent initialization: {e}")
+        agent = None
 
     app.state.agent = agent  # Store the agent in the app state
     logger.info("Lifespan: Components initialized successfully")

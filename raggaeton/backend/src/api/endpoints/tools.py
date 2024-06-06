@@ -1,10 +1,12 @@
 import logging
+import google.api_core.exceptions
 from llama_index.core.tools.query_engine import QueryEngineTool
 from llama_index.core.query_engine.router_query_engine import RouterQueryEngine
 from llama_index.core.selectors.llm_selectors import LLMSingleSelector
 from llama_index.packs.ragatouille_retriever.base import RAGatouilleRetrieverPack
 from llama_index.tools.google import GoogleSearchToolSpec
 from llama_index.llms.openai import OpenAI
+from raggaeton.backend.src.utils.gcs import save_data, create_bucket
 from raggaeton.backend.src.utils.common import config_loader, base_dir
 from raggaeton.backend.src.utils.utils import (
     create_mock_document,
@@ -51,23 +53,46 @@ def create_rag_query_tool(
     logger.info(f"Ragatouille pack at: {pack_path}")
 
     if index_path:
+        logger.info(f"Index path provided: {index_path}")
         # Load the index from the specified path
         if not os.path.exists(index_path):
             raise FileNotFoundError(f"Index path {index_path} does not exist")
-        ragatouille_pack = RAGatouilleRetrieverPack(
-            docs,
-            llm=OpenAI(model=model_name),
-            index_name=index_name,
-            top_k=top_k,
-            index_path=index_path,
-        )
+        logger.info(f"Loading RAGatouilleRetrieverPack from {index_path}")
+        try:
+            ragatouille_pack = RAGatouilleRetrieverPack(
+                docs,
+                llm=OpenAI(model=model_name),
+                index_name=index_name,
+                top_k=top_k,
+                index_path=index_path,
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize RAGatouilleRetrieverPack: {e}")
+            raise
     else:
-        ragatouille_pack = RAGatouilleRetrieverPack(
-            docs, llm=OpenAI(model=model_name), index_name=index_name, top_k=top_k
-        )
+        logger.info("No index path provided, creating new RAGatouilleRetrieverPack")
+        try:
+            ragatouille_pack = RAGatouilleRetrieverPack(
+                docs, llm=OpenAI(model=model_name), index_name=index_name, top_k=top_k
+            )
+            logger.info("Saving index data to GCS...")
+            bucket_name = config_loader.get("gcs.bucket_name")
+            create_bucket(bucket_name)
+            save_data(local_path=os.path.join(base_dir, ".ragatouille/colbert/indexes"))
+            logger.info("Index data saved to GCS successfully.")
+        except google.api_core.exceptions.NotFound as e:
+            logger.error(f"GCS bucket not found: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to save data to GCS: {e}")
+            raise
+    try:
+        rag_query = ragatouille_pack.get_modules()["query_engine"]
+        logger.info(f"Ragatouille indexed at: {ragatouille_pack.index_path}")
+    except Exception as e:
+        logger.error(f"Failed to get query engine from RAGatouilleRetrieverPack: {e}")
+        raise
 
-    rag_query = ragatouille_pack.get_modules()["query_engine"]
-    logger.info(f"Ragatouille indexed at: {ragatouille_pack.index_path}")
     # TODO: persist and remember index location for subsequent loading
     return QueryEngineTool.from_defaults(
         query_engine=rag_query,
@@ -148,6 +173,8 @@ def create_router_query_engine(vector_store, documents):
 
 def load_rag_query_tool(index_path=None, docs=None):
     if docs is None:
+        logger.debug("No documents are passed in, using a mock document")
+
         # Use a mock document if none are provided
         docs = [create_mock_document()]
 

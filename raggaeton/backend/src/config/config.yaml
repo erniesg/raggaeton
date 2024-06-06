@@ -6,7 +6,6 @@ table_page_status: "tia_page_status"
 test_table: "test_table"
 supabase_host: "aws-0-ap-southeast-1.pooler.supabase.com"
 supabase_user: "postgres.zbqrnhxgqdhpfurfnoor"
-supabase_pw: "15ZJm1ADzRS1RjAl"
 index_name: "test_collection"
 
 document:
@@ -50,3 +49,7 @@ logging:
   level: "DEBUG"
   file: "log/app.log"  # Relative path from project root, leave empty to not save
   enable_console: true
+
+gcs:
+  bucket_name: "raggaeton"
+  index_path: "indexes"

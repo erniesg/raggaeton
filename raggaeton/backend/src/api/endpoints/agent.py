@@ -107,12 +107,16 @@ def create_agent(
 
 
 def init_agent(index_path=None):
+    logger.debug("init_agent called")
+
     global agent
     if agent is None:
         logger.info("Initializing agent components...")
         config = load_config()
+        logger.debug(f"Loaded config: {config}")
 
         google_search_tool = create_google_search_tool()
+        logger.debug("Created Google search tool")
 
         # Use the default index path if none is provided
         if index_path is None:
@@ -122,6 +126,8 @@ def init_agent(index_path=None):
 
         # Check if the index path exists
         if os.path.exists(index_path):
+            logger.debug(f"Index path {index_path} exists. Loading RAG query tool.")
+
             # Load the RAG query tool with the existing index
             rag_query_tool = load_rag_query_tool(index_path=index_path)
             tools = [google_search_tool, rag_query_tool]
@@ -130,6 +136,8 @@ def init_agent(index_path=None):
                 f"Index path {index_path} does not exist. Initializing agent with default configuration."
             )
             documents = load_documents()
+            logger.debug(f"Loaded documents: {documents}")
+
             tools = [google_search_tool, create_rag_query_tool(docs=documents)]
 
         # Initialize the agent with pre-loaded tools
@@ -145,6 +153,8 @@ def init_agent(index_path=None):
 
 
 def load_agent(index_path=None):
+    logger.debug("load_agent called")
+
     global agent
     if agent is None:
         logger.info("Loading agent components...")
