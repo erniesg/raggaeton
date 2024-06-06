@@ -1,6 +1,7 @@
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from raggaeton.backend.src.api.endpoints.agent import get_agent
 from raggaeton.backend.src.utils.common import config_loader
 from raggaeton.backend.src.utils.error_handler import (
@@ -13,6 +14,15 @@ import os
 config_loader._setup_logging()
 logger = logging.getLogger(__name__)
 app = FastAPI()
+
+# Configure CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Update with your frontend's URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Middleware to catch and handle exceptions globally

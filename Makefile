@@ -1,4 +1,4 @@
-.PHONY: setup docker-build-backend docker-build-backend-dev docker-run-backend docker-run-backend-dev docker-build-macos docker-run-macos docker-enter-backend docker-enter-backend-dev docker-build-macos-dev docker-run-macos-dev docker-enter-macos-dev
+.PHONY: setup docker-build-backend docker-build-backend-dev docker-run-backend docker-run-backend-dev docker-build-macos docker-run-macos docker-enter-backend docker-enter-backend-dev docker-build-macos-dev docker-run-macos-dev docker-enter-macos-dev docker-build-frontend docker-run-frontend start-raggaeton-dev-macos
 
 # Default values
 ENVIRONMENT ?= prod
@@ -154,4 +154,30 @@ docker-build-and-run-backend-macos:
 # Combined Docker build and run for macOS (dev)
 docker-build-and-run-backend-macos-dev:
 	PLATFORM=linux/arm64 make docker-build-backend-dev
-	PLATFORM=linux/arm64 make docker-run-backend-dev
+	PLATFORM=linux/arm64 make docker-run-backend-dev ENV_FILE=$(ENV_FILE) VOLUME=$(VOLUME)
+
+# Frontend Docker build
+docker-build-frontend:
+	@echo "Building Docker image for frontend..."
+	cd ../raggaeton-frontend && docker build -t raggaeton-tia-frontend .
+
+# Frontend Docker run
+docker-run-frontend:
+	@echo "Running Docker container for frontend..."
+	docker run -it --rm -p 3000:3000 raggaeton-tia-frontend
+
+# Combined Docker build and run for frontend
+docker-build-and-run-frontend: docker-build-frontend docker-run-frontend
+
+# Start Raggaeton (dev/macOS)
+start-raggaeton-dev-macos:
+	@echo "Starting Raggaeton (dev/macOS)..."
+	PLATFORM=linux/arm64 make docker-build-backend-dev
+	PLATFORM=linux/arm64 make docker-run-backend-dev ENV_FILE=$(ENV_FILE) VOLUME=$(VOLUME) &
+	make docker-build-frontend
+	make docker-run-frontend
+
+# Start Raggaeton (using docker-compose)
+start-raggaeton:
+	@echo "Starting Raggaeton using docker-compose..."
+	docker-compose up --build
