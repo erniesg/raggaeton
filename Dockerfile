@@ -24,16 +24,17 @@ ENV PATH="/root/.local/bin:$PATH"
 WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 
-# Install dependencies using Poetry
 RUN echo "Installing dependencies..." \
-    && if [ "$ENVIRONMENT" = "prod" ]; then \
-        poetry install --no-dev --no-root; \
-    else \
-        poetry install --no-root; \
-    fi \
-    && poetry export -f requirements.txt --output requirements.txt --without-hashes \
-    && $VENV_PATH/bin/pip install -r requirements.txt \
-    && rm -rf /root/.local
+&& if [ "$ENVIRONMENT" = "prod" ]; then \
+    poetry install --no-dev --no-root; \
+else \
+    poetry install --no-root; \
+fi \
+&& poetry export -f requirements.txt --output requirements.txt --without-hashes \
+&& echo "Requirements:" \
+&& cat requirements.txt \
+&& $VENV_PATH/bin/pip install -r requirements.txt \
+&& rm -rf /root/.local
 
 # Verify installed packages
 RUN echo "Installed packages:" \
@@ -49,13 +50,23 @@ RUN echo "Installing application package..." \
 # Verify Git installation
 RUN git --version
 
-# Production stage
-FROM python-base as production
+# Final stage
+FROM python-base as final
 ARG ENVIRONMENT=prod
 RUN apt-get update && apt-get install --no-install-recommends -y build-essential git && git --version
 COPY --from=builder $VENV_PATH $VENV_PATH
 WORKDIR /app
 COPY --from=builder /app /app
+COPY pyproject.toml poetry.lock ./
+
+RUN --mount=type=secret,id=env,dst=/run/secrets/.env \
+if grep -q GCP_CREDENTIALS_PATH /run/secrets/.env; then \
+    export GCP_CREDENTIALS_PATH=$(grep GCP_CREDENTIALS_PATH /run/secrets/.env | cut -d '=' -f2); \
+    echo "GCP_CREDENTIALS_PATH found in .env, using mounted credentials file at $GCP_CREDENTIALS_PATH"; \
+    export GOOGLE_APPLICATION_CREDENTIALS=$GCP_CREDENTIALS_PATH; \
+else \
+    echo "GCP_CREDENTIALS_PATH not found in .env, skipping credentials file"; \
+fi
 ENV PATH="$VENV_PATH/bin:$PATH"
 EXPOSE 8000
 
@@ -64,33 +75,21 @@ RUN --mount=type=secret,id=env,dst=/run/secrets/.env \
     echo "Checking for .env file..." \
     && if [ -f /run/secrets/.env ]; then \
         echo ".env file found and loaded"; \
-        export $(cat /run/secrets/.env | xargs); \
+        cp /run/secrets/.env /app/.env; \
     else \
         echo ".env file not found, relying on environment variables"; \
     fi
 
-# Ensure the virtual environment is activated
-CMD ["/bin/bash", "-c", ". /opt/venv/bin/activate && uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level info"]
+# Set the log level based on the environment
+ARG LOG_LEVEL=info
+ENV LOG_LEVEL=${LOG_LEVEL}
 
-# Development stage
-FROM python-base as development
-ARG ENVIRONMENT=dev
-RUN apt-get update && apt-get install --no-install-recommends -y build-essential git && git --version
-COPY --from=builder $VENV_PATH $VENV_PATH
-WORKDIR /app
-COPY --from=builder /app /app
-ENV PATH="$VENV_PATH/bin:$PATH"
-EXPOSE 8000
-
-# Use Docker secret for .env file
-RUN --mount=type=secret,id=env,dst=/run/secrets/.env \
-    echo "Checking for .env file..." \
-    && if [ -f /run/secrets/.env ]; then \
-        echo ".env file found and loaded"; \
-        export $(cat /run/secrets/.env | xargs); \
-    else \
-        echo ".env file not found, relying on environment variables"; \
-    fi
 
 # Ensure the virtual environment is activated
-CMD ["/bin/bash", "-c", ". /opt/venv/bin/activate && uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug"]
+# CMD /bin/bash -c "if [ -f /app/gcp-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-credentials.json; fi && . /opt/venv/bin/activate && if [ -f /app/.env ]; then export \$(grep -v '^#' /app/.env | xargs); fi && uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level $LOG_LEVEL"
+CMD /bin/bash -c "\
+    if [ -f /app/gcp-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-credentials.json; fi && \
+    . /opt/venv/bin/activate && \
+    if [ -f /app/.env ]; then export \$(grep -v '^#' /app/.env | xargs); fi && \
+    if [ \"$$ENVIRONMENT\" = \"dev\" ]; then export LOG_LEVEL=debug; else export LOG_LEVEL=info; fi && \
+    uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level $LOG_LEVEL"

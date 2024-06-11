@@ -1,29 +1,36 @@
-   version: '3.8'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+        - linux/arm64
+      args:
+        - ENVIRONMENT=${ENVIRONMENT:-dev}
+    image: asia.gcr.io/techinasia/raggaeton-tia-backend:dev
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-dev}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${GCP_CREDENTIALS_PATH}:/app/gcp-credentials.json
+      - .env:/app/.env
+    secrets:
+      - env
 
-   services:
-     backend:
-       build:
-         context: .
-         dockerfile: Dockerfile
-         platforms:
-           - linux/amd64
-           - linux/arm64
-       image: raggaeton-tia-backend:latest
-       ports:
-         - "8000:8000"
-       env_file:
-         - .env
-       volumes:
-         - .:/raggaeton
+  frontend:
+    build:
+      context: ../raggaeton-tia-frontend
+      dockerfile: Dockerfile
+    image: asia.gcr.io/techinasia/raggaeton-tia-frontend:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://backend:8000
+    depends_on:
+      - backend
 
-     frontend:
-       build:
-         context: ../raggaeton-frontend
-         dockerfile: Dockerfile
-       image: raggaeton-tia-frontend:latest
-       ports:
-         - "3000:3000"
-       environment:
-         - REACT_APP_API_URL=http://backend:8000
-       depends_on:
-         - backend
+secrets:
+  env:
+    file: .env

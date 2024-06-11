@@ -12,3 +12,6 @@ frontend/node_modules/
 log/
 *.log
 .env_bu
+tia-demo-key.json
+*.bu
+*.python-version

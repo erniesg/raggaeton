@@ -2,7 +2,15 @@ from typing import List, Dict, Any
 from datetime import datetime
 from llama_index.core import Document
 from llama_index.core import SummaryIndex, VectorStoreIndex
+from raggaeton.backend.src.utils.common import base_dir
+
 import logging
+import time
+import requests
+from typing import Callable
+import json
+import os
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -73,3 +81,45 @@ def create_indices(vector_store, documents):
     logger.info("Summary index created from documents")
 
     return vector_index, summary_index
+
+
+def exponential_retry(
+    func: Callable, retries: int = 5, backoff_in_seconds: int = 3, *args, **kwargs
+):
+    attempt = 0
+    while attempt < retries:
+        try:
+            return func(*args, **kwargs)
+        except requests.RequestException as e:
+            logger.warning(f"Attempt {attempt + 1} failed: {e}")
+            attempt += 1
+            sleep_time = backoff_in_seconds * (2**attempt)
+            logger.info(f"Retrying in {sleep_time} seconds...")
+            time.sleep(sleep_time)
+    raise Exception(f"All {retries} retries failed.")
+
+
+def load_textfx_examples():
+    with open(
+        os.path.join(base_dir, "raggaeton/backend/src/config/textfx_examples.json"), "r"
+    ) as file:
+        return json.load(file)
+
+
+textfx_examples = load_textfx_examples()
+
+
+def get_random_examples():
+    examples = {}
+    for textfx_type in textfx_examples.keys():
+        example = get_random_example(textfx_type)
+        if example:
+            examples[textfx_type] = example
+    return examples
+
+
+def get_random_example(textfx_type):
+    examples = textfx_examples.get(textfx_type, {}).get("examples", [])
+    if examples:
+        return random.choice(examples)
+    return None

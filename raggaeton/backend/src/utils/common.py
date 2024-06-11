@@ -4,6 +4,7 @@ import logging
 from dotenv import load_dotenv
 from google.cloud import secretmanager
 import logging.config
+from raggaeton.backend.src.utils.error_handler import error_handling_context
 
 
 def find_project_root(current_path):
@@ -49,35 +50,70 @@ class ConfigLoader:
         return cls._instance
 
     def _load_config(self):
-        self._load_env()
-        self._load_yaml_config()
-        self._load_prompts()
-        self._setup_logging()
+        with error_handling_context():
+            self._load_env()
+            self._load_yaml_config()
+            self._load_prompts()
+            self._setup_logging()
 
     def _load_env(self):
-        gcp_credentials_path = os.getenv("GCP_CREDENTIALS_PATH")
-        if gcp_credentials_path and os.path.exists(gcp_credentials_path):
-            logger.info(
-                "GCP credentials path provided. Attempting to load secrets from GCP Secret Manager."
-            )
-            self._load_gcp_secrets(gcp_credentials_path)
-        else:
-            logger.info(
-                "No GCP credentials path provided or file does not exist. Falling back to local .env file."
-            )
-            dotenv_path = os.path.join(base_dir, ".env")
-            load_dotenv(dotenv_path=dotenv_path)
-            self.secrets = {
-                "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
-                "CLAUDE_API_KEY": os.getenv("CLAUDE_API_KEY"),
-                "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY"),
-                "GOOGLE_SEARCH_ENGINE_ID": os.getenv("GOOGLE_SEARCH_ENGINE_ID"),
-                "SUPABASE_PW": os.getenv("SUPABASE_PW"),
-                # Add other secrets here
-            }
+        with error_handling_context():
+            # Look for .env file in the local project directory
+            local_dotenv_path = os.path.join(base_dir, ".env")
+
+            if os.path.exists(local_dotenv_path):
+                load_dotenv(dotenv_path=local_dotenv_path)
+            else:
+                raise FileNotFoundError(
+                    "Could not find .env file in the project directory."
+                )
+
+            gcp_credentials_path = os.getenv("GCP_CREDENTIALS_PATH")
+            container_gcp_credentials_path = "/app/gcp-credentials.json"
+
+            if gcp_credentials_path:
+                if os.path.exists(container_gcp_credentials_path):
+                    logger.info(
+                        "GCP credentials path provided. Attempting to load secrets from GCP Secret Manager."
+                    )
+                    self._load_gcp_secrets(container_gcp_credentials_path)
+                else:
+                    # If the specified path doesn't exist, try the mounted path inside the container
+                    container_gcp_credentials_path = os.path.join(
+                        "/app/keys", os.path.basename(gcp_credentials_path)
+                    )
+                    if os.path.exists(container_gcp_credentials_path):
+                        logger.info(
+                            "GCP credentials file not found at the specified path. Attempting to load from the mounted path inside the container."
+                        )
+                        self._load_gcp_secrets(container_gcp_credentials_path)
+                    else:
+                        raise FileNotFoundError(
+                            f"GCP credentials file not found at {gcp_credentials_path} or {container_gcp_credentials_path}"
+                        )
+            else:
+                logger.info(
+                    "No GCP credentials path provided in .env. Loading secrets from .env file."
+                )
+                self.secrets = {
+                    "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
+                    "CLAUDE_API_KEY": os.getenv("CLAUDE_API_KEY"),
+                    "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY"),
+                    "GOOGLE_SEARCH_ENGINE_ID": os.getenv("GOOGLE_SEARCH_ENGINE_ID"),
+                    "SUPABASE_PW": os.getenv("SUPABASE_PW"),
+                    "SUPABASE_KEY": os.getenv("SUPABASE_KEY"),
+                    "YDC_API_KEY": os.getenv("YDC_API_KEY"),
+                    "REDDIT_CLIENT_ID": os.getenv("REDDIT_CLIENT_ID"),
+                    "REDDIT_SECRET": os.getenv("REDDIT_SECRET"),
+                    "SERP_API_KEY": os.getenv("SERP_API_KEY"),
+                    "MODAL_API_KEY": os.getenv("MODAL_API_KEY"),
+                    "JINA_READER_API": os.getenv("JINA_READER_API"),
+                    # Add other secrets here
+                }
+                logger.info("Loaded secrets from .env file.")
 
     def _load_gcp_secrets(self, credentials_path):
-        try:
+        with error_handling_context():
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
             client = secretmanager.SecretManagerServiceClient()
             project_id = os.getenv("GCP_PROJECT_ID")
@@ -87,16 +123,23 @@ class ConfigLoader:
                 "GOOGLE_API_KEY",
                 "GOOGLE_SEARCH_ENGINE_ID",
                 "SUPABASE_PW",
+                "SUPABASE_KEY",
+                "YDC_API_KEY",
+                "REDDIT_CLIENT_ID",
+                "REDDIT_SECRET",
+                "SERP_API_KEY",
+                "MODAL_API_KEY",
+                "JINA_READER_API",
             ]
             self.secrets = {}
             for secret_name in secret_names:
                 name = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
+                logger.info(f"Attempting to load secret: {name}")
                 response = client.access_secret_version(request={"name": name})
-                self.secrets[secret_name] = response.payload.data.decode("UTF-8")
+                secret_value = response.payload.data.decode("UTF-8")
+                self.secrets[secret_name] = secret_value
+                os.environ[secret_name] = secret_value  # Set the environment variable
             logger.info("Successfully loaded secrets from GCP Secret Manager.")
-        except Exception as e:
-            logger.error(f"Failed to load secrets from GCP Secret Manager: {e}")
-            raise
 
     def _load_yaml_config(self):
         config_path = os.path.join(

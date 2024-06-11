@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from raggaeton.backend.src.api.endpoints.agent import get_agent
-from raggaeton.backend.src.utils.common import config_loader
+from raggaeton.backend.src.utils.common import config_loader, base_dir
 from raggaeton.backend.src.utils.error_handler import (
     error_handling_context,
     InitializationError,
@@ -37,21 +37,21 @@ async def catch_exceptions_middleware(request: Request, call_next):
 async def lifespan(app: FastAPI):
     logger.info("Lifespan: Initializing components...")
 
-    # Log contents of the index directory
-    index_path = "/app/.ragatouille/colbert/indexes/my_index"
+    # Use base_dir to construct the index path
+    index_path = os.path.join(base_dir, ".ragatouille/colbert/indexes/my_index")
     if os.path.exists(index_path):
-        logger.info(f"Index path exists: {index_path}")
+        logger.debug(f"Index path exists: {index_path}")
     else:
         logger.error(f"Index path does not exist: {index_path}")
 
     # Load the agent with the default index path
-    logger.info("Calling get_agent...")
+    logger.debug("Calling get_agent...")
 
     agent = get_agent(index_path=index_path)
     if agent is None:
         raise InitializationError("Agent loading failed. Agent is None.")
     else:
-        logger.info(f"Agent loaded successfully: {type(agent)}")
+        logger.debug(f"Agent loaded successfully: {type(agent)}")
 
     app.state.agent = agent  # Store the agent in the app state
     logger.info("Lifespan: Components initialized successfully")

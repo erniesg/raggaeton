@@ -1,13 +1,19 @@
-import os
 from supabase import create_client
-from raggaeton.backend.src.utils.common import load_config
+from raggaeton.backend.src.utils.common import config_loader
+from raggaeton.backend.src.utils.error_handler import ConfigurationError
 import logging
 
 logger = logging.getLogger(__name__)
-config = load_config()
 
-SUPABASE_URL = config["table_url"]
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# Ensure the configuration and secrets are loaded
+config = config_loader.get_config()
+secrets = config_loader.secrets
+
+SUPABASE_URL = config.get("table_url")
+SUPABASE_KEY = secrets.get("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ConfigurationError("SUPABASE_URL and SUPABASE_KEY are required")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -55,5 +61,13 @@ def delete_data(table_name, match_criteria):
 
 
 def upsert_data(table_name, data):
-    response = supabase.table(table_name).upsert(data).execute()
-    return response.data
+    response = None  # Initialize response to None
+
+    try:
+        response = supabase.table(table_name).upsert(data).execute()
+        return response.data
+    except Exception as e:
+        logger.error(
+            f"Exception during upsert: {e}, Status Code: {getattr(response, 'status_code', 'No Response')}, Response: {getattr(response, 'data', 'No Response')}"
+        )
+        raise

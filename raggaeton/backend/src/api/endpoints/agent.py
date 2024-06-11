@@ -140,10 +140,10 @@ def check_agent_state(index_path: str, **kwargs) -> Optional[Any]:
     config_key = f"{index_path}_{kwargs}"
 
     if config_key in cached_agents:
-        logger.info(f"Found cached agent for configuration: {config_key}")
+        logger.debug(f"Found cached agent for configuration: {config_key}")
         return cached_agents[config_key]
     else:
-        logger.info(f"No cached agent found for configuration: {config_key}")
+        logger.debug(f"No cached agent found for configuration: {config_key}")
         return None
 
 
@@ -153,7 +153,7 @@ def get_agent(index_path=None, **kwargs):
     # Check if an agent with the given configuration exists in the cache
     cached_agent = check_agent_state(index_path, **kwargs)
     if cached_agent:
-        logger.info("Using cached agent")
+        logger.debug("Using cached agent")
         return cached_agent
 
     # Initialize a new agent if not found in the cache

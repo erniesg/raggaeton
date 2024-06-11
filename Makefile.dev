@@ -1,0 +1,55 @@
+.PHONY: docker-build-backend-dev docker-build-backend-prod docker-build-frontend build-and-push-all push-images
+ENV_FILE := .env
+
+# Backend Docker build (dev)
+docker-build-backend-dev:
+	@echo "Building Docker image for backend (dev)..."
+	@echo "Using .env file: $(ENV_FILE)"
+	@if [ -f "$(ENV_FILE)" ]; then \
+			echo ".env file found. Contents:"; \
+			cat $(ENV_FILE); \
+	else \
+			echo ".env file not found. Please make sure it exists."; \
+			exit 1; \
+	fi
+	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID $(ENV_FILE) | cut -d '=' -f2))
+	docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=dev --secret id=env,src=$(ENV_FILE) --build-arg GCP_CREDENTIALS_PATH=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev --push .
+	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev
+	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev-latest
+
+# Backend Docker build (prod)
+docker-build-backend-prod:
+	@echo "Building Docker image for backend (prod)..."
+	@echo "Using .env file: $(ENV_FILE)"
+	@if [ -f "$(ENV_FILE)" ]; then \
+			echo ".env file found. Contents:"; \
+			cat $(ENV_FILE); \
+	else \
+			echo ".env file not found. Please make sure it exists."; \
+			exit 1; \
+	fi
+	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID $(ENV_FILE) | cut -d '=' -f2))
+	docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=prod --secret id=env,src=$(ENV_FILE) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod --push .
+	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod
+	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod-latest
+
+# Frontend Docker build
+docker-build-frontend:
+	@echo "Building Docker image for frontend..."
+	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID .env | cut -d '=' -f2))
+	cd ../raggaeton-tia-frontend && docker build -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest .
+	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:$(shell git rev-parse --short HEAD)
+
+# Build and push all images
+build-and-push-all: docker-build-backend-dev docker-build-backend-prod docker-build-frontend push-images
+
+# Push images to GCR
+push-images:
+	@echo "Pushing images to GCR..."
+	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID .env | cut -d '=' -f2))
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev-latest
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod-latest
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:$(shell git rev-parse --short HEAD)

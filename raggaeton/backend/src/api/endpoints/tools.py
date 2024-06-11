@@ -47,13 +47,13 @@ def create_rag_query_tool(
     docs, index_name="my_index", model_name="gpt-4o", top_k=10, index_path=None
 ):
     pack_path = os.path.join(base_dir, "raggaeton/backend/src/config/ragatouille_pack")
-    logger.info(f"Ragatouille pack at: {pack_path}")
+    logger.debug(f"Ragatouille pack at: {pack_path}")
 
     if index_path:
-        logger.info(f"Index path provided: {index_path}")
+        logger.debug(f"Index path provided: {index_path}")
         if not os.path.exists(index_path):
             raise DataError(f"Index path {index_path} does not exist")
-        logger.info(f"Loading RAGatouilleRetrieverPack from {index_path}")
+        logger.debug(f"Loading RAGatouilleRetrieverPack from {index_path}")
         ragatouille_pack = RAGatouilleRetrieverPack(
             docs,
             llm=OpenAI(model=model_name),
@@ -62,15 +62,15 @@ def create_rag_query_tool(
             index_path=index_path,
         )
     else:
-        logger.info("No index path provided, creating new RAGatouilleRetrieverPack")
+        logger.debug("No index path provided, creating new RAGatouilleRetrieverPack")
         ragatouille_pack = RAGatouilleRetrieverPack(
             docs, llm=OpenAI(model=model_name), index_name=index_name, top_k=top_k
         )
-        logger.info("Saving index data to GCS...")
+        logger.debug("Saving index data to GCS...")
         bucket_name = config_loader.get_config().get("gcs", {}).get("bucket_name")
         create_bucket(bucket_name)
         save_data(local_path=os.path.join(base_dir, ".ragatouille/colbert/indexes"))
-        logger.info("Index data saved to GCS successfully.")
+        logger.debug("Index data saved to GCS successfully.")
 
     rag_query = ragatouille_pack.get_modules()["query_engine"]
     logger.info(f"Ragatouille indexed at: {ragatouille_pack.index_path}")
@@ -146,6 +146,6 @@ def load_rag_query_tool(index_path=None, docs=None):
             base_dir, "raggaeton/raggaeton/.ragatouille/colbert/indexes/my_index"
         )
 
-    logger.debug(f"Loading RAG query tool from index path: {index_path}")
+    logger.info(f"Loading RAG query tool from index path: {index_path}")
 
     return create_rag_query_tool(docs, index_path=index_path)

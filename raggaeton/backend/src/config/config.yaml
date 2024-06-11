@@ -3,6 +3,7 @@ table_url: "https://zbqrnhxgqdhpfurfnoor.supabase.co"
 table_posts: "tia_posts"
 table_batch_log: "tia_batch_log"
 table_page_status: "tia_page_status"
+table_fetched_data: "balancethegrind_fetched_data"
 test_table: "test_table"
 supabase_host: "aws-0-ap-southeast-1.pooler.supabase.com"
 supabase_user: "postgres.zbqrnhxgqdhpfurfnoor"
@@ -49,7 +50,7 @@ logging:
   prod:
     level: "INFO"
     file: "log/app_prod.log"
-    enable_console: false
+    enable_console: true
   dev:
     level: "DEBUG"
     file: "log/app_dev.log"
