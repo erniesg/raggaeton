@@ -6,13 +6,16 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     VENV_PATH="/opt/venv" \
     PATH="$VENV_PATH/bin:$PATH" \
-    PYTHONPATH="/app/src:$PYTHONPATH"
+    PYTHONPATH="/app/src:$PYTHONPATH" \
+    POETRY_HTTP_TIMEOUT=300
 
 # Builder stage
 FROM python-base as builder
 ARG ENVIRONMENT=prod
+ARG CLEAR_CACHE=false
+
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    build-essential libpq-dev gettext curl git \
+    build-essential libpq-dev gettext curl git wget \
     && python3 -m venv $VENV_PATH \
     && $VENV_PATH/bin/pip install --upgrade pip
 
@@ -20,15 +23,26 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 
+# Optionally clear Poetry cache and virtual environments
+RUN if [ "$CLEAR_CACHE" = "true" ]; then \
+    rm -rf /root/.cache/pypoetry && rm -rf /root/.local/share/virtualenvs; \
+fi
+
+# Ensure latest version of filelock
+RUN pip install --upgrade filelock
+
 # Copy pyproject.toml and poetry.lock
 WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 
 RUN echo "Installing dependencies..." \
+&& . $VENV_PATH/bin/activate \
 && if [ "$ENVIRONMENT" = "prod" ]; then \
-    poetry install --no-dev --no-root; \
+    poetry config virtualenvs.create false \
+    && poetry install --no-dev --no-root -vvv; \
 else \
-    poetry install --no-root; \
+    poetry config virtualenvs.create false \
+    && poetry install --no-root -vvv; \
 fi \
 && poetry export -f requirements.txt --output requirements.txt --without-hashes \
 && echo "Requirements:" \
@@ -75,7 +89,8 @@ RUN --mount=type=secret,id=gcp-credentials,dst=/run/secrets/gcp-credentials.json
 
 # Download .ragatouille from GCS
 RUN --mount=type=secret,id=gcp-credentials,dst=/run/secrets/gcp-credentials.json \
-    gsutil cp -r gs://techinasia-demo/.ragatouille /app/.ragatouille
+    mkdir -p /app/.ragatouille && \
+    gsutil cp -r gs://techinasia-demo/.ragatouille/* /app/.ragatouille/
 
 # Install the application package
 RUN echo "Installing application package..." \
@@ -106,7 +121,7 @@ EXPOSE 8000
 # Use Docker secret for .env file
 RUN --mount=type=secret,id=env,dst=/run/secrets/.env \
     echo "Checking for .env file..." \
-    && if [ -f /run/secrets/.env ]; then \
+    && if [ -f /run/secrets/.env]; then \
         echo ".env file found and loaded"; \
         cp /run/secrets/.env /app/.env; \
     else \
@@ -119,8 +134,8 @@ ENV LOG_LEVEL=${LOG_LEVEL}
 
 # Ensure the virtual environment is activated
 CMD /bin/bash -c "\
-    if [ -f /run/secrets/gcp-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp-credentials.json; fi && \
+    if [ -f /run/secrets/gcp-credentials.json]; then export GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp-credentials.json; fi && \
     . /opt/venv/bin/activate && \
-    if [ -f /app/.env ]; then export \$(grep -v '^#' /app/.env | xargs); fi && \
-    if [ \"$$ENVIRONMENT\" = \"dev\" ]; then export LOG_LEVEL=debug; else export LOG_LEVEL=info; fi && \
+    if [ -f /app/.env]; then export \$(grep -v '^#' /app/.env | xargs); fi && \
+    if [ \"$$ENVIRONMENT\" = \"dev\"]; then export LOG_LEVEL=debug; else export LOG_LEVEL=info; fi && \
     uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level \$$LOG_LEVEL"

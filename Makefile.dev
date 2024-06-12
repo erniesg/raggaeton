@@ -1,19 +1,20 @@
 .PHONY: docker-build-backend-dev docker-build-backend-prod docker-build-frontend build-and-push-all push-images
 ENV_FILE := .env
 
+
 # Backend Docker build (dev)
 docker-build-backend-dev:
 	@echo "Building Docker image for backend (dev)..."
 	@echo "Using .env file: $(ENV_FILE)"
 	@if [ -f "$(ENV_FILE)" ]; then \
-			echo ".env file found. Contents:"; \
-			cat $(ENV_FILE); \
+		echo ".env file found. Contents:"; \
+		cat $(ENV_FILE); \
 	else \
-			echo ".env file not found. Please make sure it exists."; \
-			exit 1; \
+		echo ".env file not found. Please make sure it exists."; \
+		exit 1; \
 	fi
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID $(ENV_FILE) | cut -d '=' -f2))
-	docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=dev --secret id=env,src=$(ENV_FILE) --secret id=gcp-credentials,src=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev --push .
+	BUILDKIT_STEP_TIMEOUT=1800 docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=dev --secret id=env,src=$(ENV_FILE) --secret id=gcp-credentials,src=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev --push .
 	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev
 	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev-latest
 
