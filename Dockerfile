@@ -43,6 +43,9 @@ RUN echo "Installed packages:" \
 # Copy the rest of the application code
 COPY . .
 
+# Copy the .ragatouille directory
+COPY .ragatouille /app/.ragatouille
+
 # Install the application package
 RUN echo "Installing application package..." \
     && . $VENV_PATH/bin/activate && pip install -e .
@@ -57,7 +60,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y build-essential
 COPY --from=builder $VENV_PATH $VENV_PATH
 WORKDIR /app
 COPY --from=builder /app /app
-COPY pyproject.toml poetry.lock ./
 
 RUN --mount=type=secret,id=env,dst=/run/secrets/.env \
 if grep -q GCP_CREDENTIALS_PATH /run/secrets/.env; then \
@@ -84,12 +86,10 @@ RUN --mount=type=secret,id=env,dst=/run/secrets/.env \
 ARG LOG_LEVEL=info
 ENV LOG_LEVEL=${LOG_LEVEL}
 
-
 # Ensure the virtual environment is activated
-# CMD /bin/bash -c "if [ -f /app/gcp-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-credentials.json; fi && . /opt/venv/bin/activate && if [ -f /app/.env ]; then export \$(grep -v '^#' /app/.env | xargs); fi && uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level $LOG_LEVEL"
 CMD /bin/bash -c "\
     if [ -f /app/gcp-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-credentials.json; fi && \
     . /opt/venv/bin/activate && \
     if [ -f /app/.env ]; then export \$(grep -v '^#' /app/.env | xargs); fi && \
     if [ \"$$ENVIRONMENT\" = \"dev\" ]; then export LOG_LEVEL=debug; else export LOG_LEVEL=info; fi && \
-    uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level $LOG_LEVEL"
+    uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level \$$LOG_LEVEL"

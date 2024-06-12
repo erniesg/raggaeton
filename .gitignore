@@ -6,12 +6,12 @@ __pycache__/
 tia_cookie.txt
 .deepeval
 frontend/.next/
-.ragatouille/
 frontend/node_modules/
-*ragatouille_pack/
 log/
 *.log
 .env_bu
 tia-demo-key.json
 *.bu
 *.python-version
+.ragatouille/
+*ragatouille_pack/
