@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   backend:
     build:
@@ -11,10 +13,11 @@ services:
     image: asia.gcr.io/techinasia/raggaeton-tia-backend:dev
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-dev}
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp-credentials.json
     ports:
       - "8000:8000"
     volumes:
-      - ${GCP_CREDENTIALS_PATH}:/app/gcp-credentials.json
+      - type=bind,source=${GCP_CREDENTIALS_PATH},target=/run/secrets/gcp-credentials.json,readonly
       - .env:/app/.env
     secrets:
       - env

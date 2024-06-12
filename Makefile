@@ -47,6 +47,18 @@ setup:
 	echo "GCP_CREDENTIALS_PATH=$$gcp_credentials_path" > .env; \
 	echo "GCP_PROJECT_ID=$$gcp_project_id" >> .env; \
 	echo "Environment variables set for backend."
+	@echo "Initializing Docker Swarm..."
+	@if ! docker info --format '{{.Swarm.LocalNodeState}}' | grep -q 'active'; then \
+		docker swarm init; \
+	else \
+		echo "Docker Swarm is already active."; \
+	fi
+	@echo "Creating Docker secret for GCP credentials..."
+	@if ! docker secret ls | grep -q gcp-credentials; then \
+		docker secret create gcp-credentials $$gcp_credentials_path; \
+	else \
+		echo "Docker secret 'gcp-credentials' already exists."; \
+	fi
 
 # Install Raggaeton by pulling images from GCR (both prod and dev)
 install-raggaeton:

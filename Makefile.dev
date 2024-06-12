@@ -13,7 +13,7 @@ docker-build-backend-dev:
 			exit 1; \
 	fi
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID $(ENV_FILE) | cut -d '=' -f2))
-	docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=dev --secret id=env,src=$(ENV_FILE) --build-arg GCP_CREDENTIALS_PATH=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev --push .
+	docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=dev --secret id=env,src=$(ENV_FILE) --secret id=gcp-credentials,src=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev --push .
 	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev
 	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev-latest
 
@@ -29,7 +29,7 @@ docker-build-backend-prod:
 			exit 1; \
 	fi
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID $(ENV_FILE) | cut -d '=' -f2))
-	docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=prod --secret id=env,src=$(ENV_FILE) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod --push .
+	docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=prod --secret id=env,src=$(ENV_FILE) --secret id=gcp-credentials,src=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod --push .
 	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod
 	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod-latest
 
@@ -49,7 +49,6 @@ push-images:
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID .env | cut -d '=' -f2))
 	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev
 	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev-latest
-	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod
 	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod-latest
 	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest
 	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:$(shell git rev-parse --short HEAD)
