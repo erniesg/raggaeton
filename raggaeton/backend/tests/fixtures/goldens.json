@@ -1,0 +1,17 @@
+[
+    {"query": "What’s happening today?", "importance": "Default"},
+    {"query": "Tell me about Grab’s profitability.", "importance": "Default"},
+    {"query": "Give me a history of HonestBee.", "importance": "Default"},
+    {"query": "What are the top startups in Indonesia?", "importance": "Default"},
+    {"query": "What are the upcoming Events at Tech in Asia?", "importance": "Default"},
+    {"query": "What are the top 5 most funded startups in Southeast Asia in 2022?", "importance": "Complex query that requires summarizing information from multiple sources"},
+    {"query": "How did the COVID-19 pandemic impact the startup ecosystem in Southeast Asia?", "importance": "Relevant and timely topic that may require analysis and synthesis of information from multiple articles"},
+    {"query": "What are the recent advancements in fintech in Singapore?", "importance": "Specific query focusing on a particular industry and location"},
+    {"query": "Can you provide details on the latest funding rounds for startups in Vietnam?", "importance": "Tests the system's ability to provide up-to-date information on a specific topic and location"},
+    {"query": "What are the legal implications of the new data privacy regulations in Malaysia?", "importance": "Challenging query that may not have a direct answer in the available data and requires an understanding of legal issues"},
+    {"query": "Discuss the challenges faced by women entrepreneurs in the tech industry in Indonesia.", "importance": "Addresses a socially relevant topic and tests the system's ability to provide insights on a specific issue and location"},
+    {"query": "What are the environmental sustainability initiatives by tech companies in Asia?", "importance": "Broad query that may require summarizing information from multiple sources and touches on an important global issue"},
+    {"query": "How are AI and machine learning transforming the logistics sector in Asia?", "importance": "Tests the system's ability to provide insights on the impact of emerging technologies on a specific industry"},
+    {"query": "What are the ethical concerns surrounding the use of AI in tech startups in Asia?", "importance": "Addresses a complex and sensitive topic that may challenge the system's ability to provide objective responses"},
+    {"query": "I heard there was a recent controversy involving a well-known tech company in Asia. Can you tell me more about it?", "importance": "Potentially sensitive topic that tests the system's ability to handle queries related to controversies objectively"}
+]
