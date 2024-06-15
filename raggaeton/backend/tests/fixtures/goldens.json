@@ -1,6 +1,6 @@
 [
-    {"query": "What’s happening today?", "importance": "Default"},
-    {"query": "Tell me about Grab’s profitability.", "importance": "Default"},
+    {"query": "What's happening today?", "importance": "Default"},
+    {"query": "Tell me about Grab's profitability.", "importance": "Default"},
     {"query": "Give me a history of HonestBee.", "importance": "Default"},
     {"query": "What are the top startups in Indonesia?", "importance": "Default"},
     {"query": "What are the upcoming Events at Tech in Asia?", "importance": "Default"},

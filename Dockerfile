@@ -132,10 +132,28 @@ RUN --mount=type=secret,id=env,dst=/run/secrets/.env \
 ARG LOG_LEVEL=info
 ENV LOG_LEVEL=${LOG_LEVEL}
 
-# Ensure the virtual environment is activated
 CMD /bin/bash -c "\
-    if [ -f /run/secrets/gcp-credentials.json]; then export GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp-credentials.json; fi && \
+    if [ -f /run/secrets/gcp-credentials.json ]; then \
+        echo 'GCP credentials file exists. Setting GOOGLE_APPLICATION_CREDENTIALS...'; \
+        export GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp-credentials.json; \
+    else \
+        echo 'GCP credentials file does not exist. Skipping setting GOOGLE_APPLICATION_CREDENTIALS.'; \
+    fi && \
+    echo 'Activating virtual environment...' && \
     . /opt/venv/bin/activate && \
-    if [ -f /app/.env]; then export \$(grep -v '^#' /app/.env | xargs); fi && \
-    if [ \"$$ENVIRONMENT\" = \"dev\"]; then export LOG_LEVEL=debug; else export LOG_LEVEL=info; fi && \
+    echo 'Checking for .env file...' && \
+    if [ -f /app/.env ]; then \
+        echo '.env file found and loaded'; \
+        export \$(grep -v '^#' /app/.env | xargs); \
+    else \
+        echo '.env file not found, relying on environment variables'; \
+    fi && \
+    if [ \"$$ENVIRONMENT\" = \"dev\" ]; then \
+        echo 'Environment set to development. Setting LOG_LEVEL to debug.'; \
+        export LOG_LEVEL=debug; \
+    else \
+        echo 'Environment set to production. Setting LOG_LEVEL to info.'; \
+        export LOG_LEVEL=info; \
+    fi && \
+    echo 'Starting uvicorn server...' && \
     uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level \$$LOG_LEVEL"
