@@ -15,3 +15,6 @@ tia-demo-key.json
 *.python-version
 .ragatouille/
 *ragatouille_pack/
+*.mp4
+.python-version
+*public/

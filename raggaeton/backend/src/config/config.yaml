@@ -23,6 +23,7 @@ embedding:
   batch_size: 100
 
 llm:
+  default_model: "gpt-4o"
   models:
     - model_name: "gpt-4o"
       params:

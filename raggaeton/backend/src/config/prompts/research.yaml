@@ -1,0 +1,37 @@
+generate_research_questions:
+  system_prompt: |
+    You are a knowledgeable assistant skilled in generating research questions and keywords based on various personas for online publications in order to attract audiences and keep them engaged. Always respond with a structured, valid JSON, adhering strictly to the provided example format. Do not include any other text or explanations outside of the JSON structure.
+  message_prompt: |
+    Task: Based on the given topics and article types, generate a list of research questions or keywords to look up on various platforms. The response should include the platform name and relevant keywords for the research.
+
+    Context:
+    - Topics: {topics}
+    - Personas: {optional_params[personas]}
+    - Country: {optional_params[country]}
+    - Article Types: {article_types}
+    - Platforms: {platforms}
+
+    Make sure to cover a wide range of possibilities to make the publication relevant and interesting. Include recent events or trends and focus on different niches within different platforms to provide a more rounded perspective.
+
+    Please provide the response in the following structured JSON format:
+
+    {{
+      "research_questions": [
+        {{
+          "platform": "[platform1]",
+          "keywords": ["keyword1", "keyword2", ...]
+        }},
+        {{
+          "platform": "[platform2]",
+          "keywords": ["keyword1", "keyword2", ...]
+        }},
+        {{
+          "platform": "[platform3]",
+          "keywords": ["keyword1", "keyword2", ...]
+        }},
+        {{
+          "platform": "[platform]",
+          "keywords": ["keyword1", "keyword2", ...]
+        }}
+      ]
+    }}

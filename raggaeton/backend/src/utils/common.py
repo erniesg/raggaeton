@@ -6,6 +6,11 @@ from google.cloud import secretmanager
 import logging.config
 from raggaeton.backend.src.utils.error_handler import error_handling_context
 
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 
 def find_project_root(current_path):
     """Traverse up until we find pyproject.toml, indicating the project root."""
@@ -26,11 +31,8 @@ try:
 except FileNotFoundError:
     base_dir = "/root/raggaeton"  # Adjust this fallback path as needed for remote env
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 logger.info(f"Base directory: {base_dir}")
-
-dotenv_path = os.path.join(base_dir, ".env")
-load_dotenv(dotenv_path=dotenv_path)
 
 
 def load_config():
@@ -46,6 +48,7 @@ class ConfigLoader:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ConfigLoader, cls).__new__(cls)
+            cls._instance.secrets = {}
             cls._instance._load_config()
         return cls._instance
 
@@ -63,16 +66,30 @@ class ConfigLoader:
 
             if os.path.exists(local_dotenv_path):
                 load_dotenv(dotenv_path=local_dotenv_path)
+                logger.info(f"Loaded .env file from {local_dotenv_path}")
             else:
                 raise FileNotFoundError(
                     "Could not find .env file in the project directory."
                 )
 
+            # Log all environment variables to debug
+            for key, value in os.environ.items():
+                logger.debug(f"ENV {key}: {value}")
+
             gcp_credentials_path = os.getenv("GCP_CREDENTIALS_PATH")
+            logger.info(f"GCP_CREDENTIALS_PATH from .env: {gcp_credentials_path}")
             container_gcp_credentials_path = "/app/gcp-credentials.json"
 
             if gcp_credentials_path:
-                if os.path.exists(container_gcp_credentials_path):
+                logger.info(f"Checking existence of {gcp_credentials_path}")
+                if os.path.exists(gcp_credentials_path):
+                    logger.info(f"Found GCP credentials at {gcp_credentials_path}")
+                    if os.access(gcp_credentials_path, os.R_OK):
+                        logger.info("GCP credentials file is readable")
+                        self._load_gcp_secrets(gcp_credentials_path)
+                    else:
+                        logger.error("GCP credentials file is not readable")
+                elif os.path.exists(container_gcp_credentials_path):
                     logger.info(
                         "GCP credentials path provided. Attempting to load secrets from GCP Secret Manager."
                     )

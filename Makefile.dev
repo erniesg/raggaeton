@@ -14,9 +14,9 @@ docker-build-backend-dev:
 		exit 1; \
 	fi
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID $(ENV_FILE) | cut -d '=' -f2))
-	BUILDKIT_STEP_TIMEOUT=1800 docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=dev --secret id=env,src=$(ENV_FILE) --secret id=gcp-credentials,src=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev --push .
-	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev
-	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev-latest
+	BUILDKIT_STEP_TIMEOUT=1800 docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=dev --secret id=env,src=$(ENV_FILE) --secret id=gcp-credentials,src=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:dev --push .
+	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:dev
+	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:dev asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:dev-latest
 
 # Backend Docker build (prod)
 docker-build-backend-prod:
@@ -30,9 +30,9 @@ docker-build-backend-prod:
 			exit 1; \
 	fi
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID $(ENV_FILE) | cut -d '=' -f2))
-	docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=prod --secret id=env,src=$(ENV_FILE) --secret id=gcp-credentials,src=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod --push .
-	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod
-	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod-latest
+	docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENVIRONMENT=prod --secret id=env,src=$(ENV_FILE) --secret id=gcp-credentials,src=$(shell grep GCP_CREDENTIALS_PATH $(ENV_FILE) | cut -d '=' -f2) -t asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:prod --push .
+	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:prod
+	docker tag asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:prod asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:prod-latest
 
 # Frontend Docker build
 docker-build-frontend:
@@ -48,8 +48,8 @@ build-and-push-all: docker-build-backend-dev docker-build-backend-prod docker-bu
 push-images:
 	@echo "Pushing images to GCR..."
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID .env | cut -d '=' -f2))
-	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev
-	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev-latest
-	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod-latest
-	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest
-	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:$(shell git rev-parse --short HEAD)
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:dev
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:dev-latest
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:prod-latest
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-frontend:latest
+	docker push asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-frontend:$(shell git rev-parse --short HEAD)

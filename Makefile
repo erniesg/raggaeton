@@ -109,22 +109,22 @@ install-raggaeton:
 install-raggaeton-prod:
 	@echo "Installing Raggaeton production images from GCR..."
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID .env | cut -d '=' -f2))
-	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod
-	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest
+	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:prod
+	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-frontend:latest
 
 # Install Raggaeton by pulling development images from GCR
 install-raggaeton-dev:
 	@echo "Installing Raggaeton development images from GCR..."
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID .env | cut -d '=' -f2))
-	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:dev
-	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest
+	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:dev
+	docker pull asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-frontend:latest
 
 # Run Raggaeton for production
 run-raggaeton-prod:
 	@echo "Running Raggaeton for production..."
 	$(eval GCP_PROJECT_ID := $(shell grep GCP_PROJECT_ID .env | cut -d '=' -f2))
-	docker run --rm -p 8000:8000 -e ENVIRONMENT=prod asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-backend:prod &
-	docker run --rm -p 3000:3000 asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-tia-frontend:latest
+	docker run --rm -p 8000:8000 -e ENVIRONMENT=prod asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-backend:prod &
+	docker run --rm -p 3000:3000 asia.gcr.io/$(GCP_PROJECT_ID)/raggaeton-frontend:latest
 
 # Run Raggaeton for development
 run-raggaeton-dev:

@@ -28,6 +28,18 @@ class DataError(CustomException):
     pass
 
 
+class PromptError(CustomException):
+    """Raised when there is an error with prompt generation"""
+
+    pass
+
+
+class LLMError(CustomException):
+    """Raised when there is an error with LLM call"""
+
+    pass
+
+
 # Function to handle exceptions
 def handle_exception(exc: Exception):
     logger = logging.getLogger(__name__)
