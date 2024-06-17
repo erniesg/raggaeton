@@ -82,7 +82,11 @@ class LLMHandler:
             )
 
             try:
-                parsed_response = parse_llm_response(full_content, function_name)
+                parsed_response = parse_llm_response(
+                    full_content,
+                    function_name,
+                    request_data=request.model_dump() if request else {},
+                )
                 logger.info("Successfully called parse_llm_response")
             except Exception as e:
                 logger.error(f"Failed to parse LLM response: {e}")

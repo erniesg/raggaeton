@@ -36,7 +36,11 @@ class ContentBlock(BaseModel):
 
 class Draft(BaseModel):
     headline: str
+    hook: str
+    thesis: str
+    article_type: str
     structure: List[ContentBlock]
+    optional_params: Optional[OptionalParams] = None
 
 
 class GenerateDraftResponse(BaseModel):

@@ -1,0 +1,48 @@
+generate_draft_benefits:
+  system_prompt: |
+    You are an expert writer and journalist skilled in creating compelling and engaging content for online publications. Always respond with a structured, valid JSON, adhering strictly to the provided example format. Do not include any other text or explanations outside of the JSON structure.
+  message_prompt: |
+    Task: Given the following context, generate an updated structure for a Benefits Article to be published. Feel free to substitute optional components for required ones as alternative ways to structure the content, or include more components depending on the desired length. You may also reorder content blocks creatively to best fit the narrative.
+
+    Context:
+    - Headline: {headline}
+    - Hook: {hook}
+    - Thesis: {thesis}
+    - Article Types: {article_type}
+    - Data: {optional_params[data]}
+    - Publication: {optional_params[publication]}
+    - Country: {optional_params[country]}
+    - Personas: {optional_params[personas]}
+    - Desired Length: {optional_params[desired_length]} words
+    - Scratchpad: {optional_params[scratchpad]}
+
+    Example Structures:
+    - Structure 1: ["Introduction", "Overview of the Topic", "Benefits", "Tips for Implementation", "Conclusion"]
+    - Structure 2: ["Introduction", "Overview of the Topic", "Benefits", "Conclusion"]
+
+    Please provide the response in the following structured JSON format:
+
+    {{
+      "structure": [
+        {{
+          "content_block": "Introduction",
+          "details": "[Content Block Details]"
+        }},
+        {{
+          "content_block": "Overview of the Topic",
+          "details": "[Content Block Details]"
+        }},
+        {{
+          "content_block": "Benefits",
+          "details": "[Content Block Details]"
+        }},
+        {{
+          "content_block": "Tips for Implementation",
+          "details": "[Content Block Details]"
+        }},
+        {{
+          "content_block": "Conclusion",
+          "details": "[Content Block Details]"
+        }}
+      ]
+    }}

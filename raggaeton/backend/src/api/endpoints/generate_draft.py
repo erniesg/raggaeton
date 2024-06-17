@@ -1,41 +1,27 @@
-import json
 from fastapi import APIRouter
 from raggaeton.backend.src.schemas.content import (
     GenerateDraftRequest,
     GenerateDraftResponse,
-    ContentBlock,
-    Draft,
 )
+from raggaeton.backend.src.utils.common import logger  # Import logger
+from raggaeton.backend.src.api.services.llm_handler import LLMHandler
 
 router = APIRouter()
 
 
-# Load the JSON configuration
-def load_template(article_type):
-    with open(f"config/article_templates/{article_type}.json") as f:
-        return json.load(f)
-
-
-def load_content_blocks():
-    with open("config/article_templates/content_blocks.json") as f:
-        return json.load(f)
-
-
 @router.post("/generate-draft", response_model=GenerateDraftResponse)
 async def generate_draft(request: GenerateDraftRequest):
-    template = load_template(request.article_type)
-    content_blocks = load_content_blocks()
-    structures = template["structures"]
+    # Log the incoming request
+    logger.info(f"Received request: {request}")
 
-    # Select a structure (for simplicity, we select the first one)
-    selected_structure = structures[0]
+    # Initialize the LLM handler
+    llm_handler = LLMHandler()
 
-    # Generate the draft
-    draft_structure = [
-        ContentBlock(content_block=block, details=content_blocks[block]["details"])
-        for block in selected_structure
-    ]
+    # Call the LLM to get the response and token count
+    response, token_count = llm_handler.call_llm("generate_draft_benefits", request)
 
-    draft = Draft(headline=request.headline, structure=draft_structure)
+    # Log the LLM response
+    logger.info(f"LLM Response: {response}")
+    logger.info(f"Token Count: {token_count}")
 
-    return GenerateDraftResponse(drafts=[draft])
+    return response

@@ -1,12 +1,17 @@
 from pydantic import BaseModel, ValidationError
 from raggaeton.backend.src.schemas.research import GenerateResearchQuestionsResponse
-from raggaeton.backend.src.schemas.content import GenerateHeadlinesResponse
+from raggaeton.backend.src.schemas.content import (
+    GenerateHeadlinesResponse,
+    GenerateDraftResponse,
+)
 from raggaeton.backend.src.utils.common import logger
 from raggaeton.backend.src.utils.error_handler import error_handling_context
 import json
 
 
-def parse_llm_response(response_content: str, request_type: str) -> BaseModel:
+def parse_llm_response(
+    response_content: str, request_type: str, request_data: dict
+) -> BaseModel:
     logger.info("Entered parse_llm_response function")
     logger.info(
         f"Parsing response content: {response_content[:500]}..."
@@ -33,7 +38,6 @@ def parse_llm_response(response_content: str, request_type: str) -> BaseModel:
     with error_handling_context():
         if request_type == "generate_research_questions":
             try:
-                # Directly parse the JSON string into a Pydantic model instance using model_validate_json
                 logger.info(
                     "Attempting to parse JSON into GenerateResearchQuestionsResponse model"
                 )
@@ -54,7 +58,6 @@ def parse_llm_response(response_content: str, request_type: str) -> BaseModel:
                 raise
         elif request_type == "generate_headlines":
             try:
-                # Directly parse the JSON string into a Pydantic model instance using model_validate_json
                 logger.info(
                     "Attempting to parse JSON into GenerateHeadlinesResponse model"
                 )
@@ -63,6 +66,50 @@ def parse_llm_response(response_content: str, request_type: str) -> BaseModel:
                 )
                 logger.info(
                     "Successfully parsed response into GenerateHeadlinesResponse model"
+                )
+                return transformed_response
+            except ValidationError as e:
+                logger.error(f"Validation error: {e}")
+                raise
+            except Exception as e:
+                logger.error(f"Error parsing JSON response: {e}")
+                raise
+        elif request_type.startswith("generate_draft_"):
+            try:
+                logger.info(
+                    f"Attempting to parse JSON into GenerateDraftResponse model for {request_type}"
+                )
+
+                # Transform the response to include the 'drafts' field if it is missing
+                if "drafts" not in json_data:
+                    json_data = {
+                        "drafts": [
+                            {
+                                "headline": request_data.get("headline"),
+                                "hook": request_data.get("hook"),
+                                "thesis": request_data.get("thesis"),
+                                "article_type": request_data.get("article_type"),
+                                "structure": [
+                                    {
+                                        "content_block": block["content_block"],
+                                        "details": block["details"]
+                                        if isinstance(block["details"], str)
+                                        else " ".join(block["details"]),
+                                    }
+                                    for block in json_data.get("structure", [])
+                                ],
+                                "optional_params": request_data.get(
+                                    "optional_params", {}
+                                ),
+                            }
+                        ]
+                    }
+
+                transformed_response = GenerateDraftResponse.model_validate_json(
+                    json.dumps(json_data)
+                )
+                logger.info(
+                    f"Successfully parsed response into GenerateDraftResponse model for {request_type}"
                 )
                 return transformed_response
             except ValidationError as e:
