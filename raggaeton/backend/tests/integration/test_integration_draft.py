@@ -49,14 +49,14 @@ def test_generate_draft_without_optional_params(
     response = client.post(
         "/api/generate-draft", json=generate_draft_payload_without_optional_params
     )
-
-    # Assert the response
-    assert response.status_code == 200
     data = response.json()
 
     # Print the type and content of the response for debugging
     print(f"Response type: {type(data)}")
     print(f"Response content: {data}")
+
+    # Assert the response
+    assert response.status_code == 200
 
     assert "drafts" in data
     assert len(data["drafts"]) > 0
@@ -85,14 +85,13 @@ def test_generate_draft_with_optional_params(
     response = client.post(
         "/api/generate-draft", json=generate_draft_payload_with_optional_params
     )
-
-    # Assert the response
-    assert response.status_code == 200
     data = response.json()
 
     # Print the type and content of the response for debugging
     print(f"Response type: {type(data)}")
     print(f"Response content: {data}")
+    # Assert the response
+    assert response.status_code == 200
 
     assert "drafts" in data
     assert len(data["drafts"]) > 0

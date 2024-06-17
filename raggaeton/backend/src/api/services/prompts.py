@@ -120,6 +120,6 @@ def get_prompts(function_name, request, **kwargs):
             if suggestion["optional"]:
                 message_prompt += f"  - Optional: {suggestion['optional']}\n"
 
-    logger.debug(f"Formatted parameters for prompt: {params}")
+    logger.debug(f"Formatted message prompt: {message_prompt}")
 
     return system_prompt, message_prompt

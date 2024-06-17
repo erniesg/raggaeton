@@ -94,7 +94,11 @@ def parse_llm_response(
                                         "content_block": block["content_block"],
                                         "details": block["details"]
                                         if isinstance(block["details"], str)
-                                        else " ".join(block["details"]),
+                                        else " ".join(
+                                            str(item) for item in block["details"]
+                                        )
+                                        if isinstance(block["details"], list)
+                                        else json.dumps(block["details"]),
                                     }
                                     for block in json_data.get("structure", [])
                                 ],
@@ -104,6 +108,25 @@ def parse_llm_response(
                             }
                         ]
                     }
+
+                # Ensure 'details' is a string
+                for draft in json_data.get("drafts", []):
+                    for block in draft.get("structure", []):
+                        logger.debug(
+                            f"Original details for block {block['content_block']}: {block['details']}"
+                        )
+                        logger.debug(
+                            f"Type of details: {type(block['details'])}, Content of details: {block['details']}"
+                        )
+                        if isinstance(block["details"], list):
+                            block["details"] = " ".join(
+                                str(item) for item in block["details"]
+                            )
+                        elif isinstance(block["details"], dict):
+                            block["details"] = json.dumps(block["details"])
+                        logger.debug(
+                            f"Transformed details for block {block['content_block']}: {block['details']}"
+                        )
 
                 transformed_response = GenerateDraftResponse.model_validate_json(
                     json.dumps(json_data)
