@@ -82,12 +82,10 @@ class LLMHandler:
             )
 
             try:
-                research_questions_request = parse_llm_response(
-                    full_content, function_name
-                )
+                parsed_response = parse_llm_response(full_content, function_name)
                 logger.info("Successfully called parse_llm_response")
             except Exception as e:
                 logger.error(f"Failed to parse LLM response: {e}")
                 raise LLMError(f"Failed to parse LLM response: {e}")
 
-            return research_questions_request, token_count
+            return parsed_response, token_count

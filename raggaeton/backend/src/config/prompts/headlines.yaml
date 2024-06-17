@@ -1,0 +1,40 @@
+generate_headlines:
+  system_prompt: |
+    You are an expert writer and journalist skilled in creating compelling and engaging content for online publications. Always respond with a structured, valid JSON, adhering strictly to the provided example format. Do not include any other text or explanations outside of the JSON structure.
+  message_prompt: |
+    Task: Given the following context about {topics}, generate attention-grabbing headlines, a hook, and a thesis for a Benefits Article to be published. Feel free to substitute optional components for required ones as alternative ways to structure the content, or include more components depending on the desired length.
+
+    Context:
+    - Topics: {topics}
+    - Article Types: {article_types}
+    - Data: {optional_params[data]}
+    - Publication: {optional_params[publication]}
+    - Country: {optional_params[country]}
+    - Personas: {optional_params[personas]}
+    - Desired Length: {optional_params[desired_length]}
+    - Scratchpad: {optional_params[scratchpad]}
+
+    Please provide the response in the following structured JSON format:
+
+    {{
+      "headlines": [
+        {{
+          "headline": "Sample headline 1",
+          "article_type": "benefits",
+          "hook": "Sample hook 1",
+          "thesis": "Sample thesis 1"
+        }},
+        {{
+          "headline": "Sample headline 2",
+          "article_type": "benefits",
+          "hook": "Sample hook 2",
+          "thesis": "Sample thesis 2"
+        }},
+        {{
+          "headline": "Sample headline 3",
+          "article_type": "benefits",
+          "hook": "Sample hook 3",
+          "thesis": "Sample thesis 3"
+        }}
+      ]
+    }}

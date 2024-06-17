@@ -1,0 +1,11 @@
+{
+  "message_prompt": "Task: Given the following data about {topic}, generate attention-grabbing headlines, a thesis, and an overall structure for a Listicle to be published.",
+  "structures": [
+    [
+      "Introduction",
+      "List of Items",
+      "Conclusion"
+    ]
+  ],
+  "system_prompt": "You are an expert writer and journalist skilled in creating compelling and engaging content for online publications."
+}

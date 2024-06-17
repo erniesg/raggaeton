@@ -1,0 +1,19 @@
+{
+  "message_prompt": "Task: Given the following data about {topic}, generate attention-grabbing headlines, a thesis, and an overall structure for a How-To Article to be published.",
+  "structures": [
+    [
+      "Introduction",
+      "Overview of the Topic",
+      "Steps to Achieve the Goal",
+      "Additional Tips",
+      "Conclusion"
+    ],
+    [
+      "Introduction",
+      "Overview of the Topic",
+      "Steps to Achieve the Goal",
+      "Conclusion"
+    ]
+  ],
+  "system_prompt": "You are an expert writer and journalist skilled in creating compelling and engaging content for online publications."
+}

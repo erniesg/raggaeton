@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ValidationError
 from raggaeton.backend.src.schemas.research import GenerateResearchQuestionsResponse
+from raggaeton.backend.src.schemas.content import GenerateHeadlinesResponse
 from raggaeton.backend.src.utils.common import logger
 from raggaeton.backend.src.utils.error_handler import error_handling_context
 import json
@@ -43,6 +44,25 @@ def parse_llm_response(response_content: str, request_type: str) -> BaseModel:
                 )
                 logger.info(
                     "Successfully parsed response into GenerateResearchQuestionsResponse model"
+                )
+                return transformed_response
+            except ValidationError as e:
+                logger.error(f"Validation error: {e}")
+                raise
+            except Exception as e:
+                logger.error(f"Error parsing JSON response: {e}")
+                raise
+        elif request_type == "generate_headlines":
+            try:
+                # Directly parse the JSON string into a Pydantic model instance using model_validate_json
+                logger.info(
+                    "Attempting to parse JSON into GenerateHeadlinesResponse model"
+                )
+                transformed_response = GenerateHeadlinesResponse.model_validate_json(
+                    json.dumps(json_data)
+                )
+                logger.info(
+                    "Successfully parsed response into GenerateHeadlinesResponse model"
                 )
                 return transformed_response
             except ValidationError as e:

@@ -6,10 +6,7 @@ from google.cloud import secretmanager
 import logging.config
 from raggaeton.backend.src.utils.error_handler import error_handling_context
 
-import logging
-
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 def find_project_root(current_path):
@@ -38,8 +35,11 @@ logger.info(f"Base directory: {base_dir}")
 def load_config():
     """Load configuration from config.yaml located in the config directory under the package."""
     config_path = os.path.join(os.path.dirname(__file__), "../config", "config.yaml")
+    logger.debug(f"Loading config from: {config_path}")
     with open(config_path, "r") as file:
-        return yaml.safe_load(file)
+        config = yaml.safe_load(file)
+    logger.debug(f"Config loaded: {config}")
+    return config
 
 
 class ConfigLoader:
@@ -53,11 +53,14 @@ class ConfigLoader:
         return cls._instance
 
     def _load_config(self):
+        logger.debug("Starting _load_config")
+
         with error_handling_context():
             self._load_env()
             self._load_yaml_config()
             self._load_prompts()
             self._setup_logging()
+        logger.debug("Finished _load_config")
 
     def _load_env(self):
         with error_handling_context():
@@ -159,6 +162,8 @@ class ConfigLoader:
             logger.info("Successfully loaded secrets from GCP Secret Manager.")
 
     def _load_yaml_config(self):
+        logger.debug("Starting _load_yaml_config")
+
         config_path = os.path.join(
             os.path.dirname(__file__), "../config", "config.yaml"
         )
@@ -166,6 +171,8 @@ class ConfigLoader:
             raise FileNotFoundError(f"Config file not found at {config_path}")
         with open(config_path, "r") as file:
             self.config = yaml.safe_load(file)
+        logger.debug(f"Config loaded: {self.config}")
+        logger.debug("Finished _load_yaml_config")
 
     def _load_prompts(self):
         prompt_path = os.path.join(os.path.dirname(__file__), "../config", "prompts.md")
@@ -176,6 +183,7 @@ class ConfigLoader:
             self.prompts = ""
 
     def _setup_logging(self):
+        logger.debug("Starting _setup_logging")
         environment = os.getenv("ENVIRONMENT", "prod")
         logging_config = self.config.get("logging", {}).get(environment, {})
         log_level = logging_config.get("level", "INFO").upper()
@@ -218,6 +226,8 @@ class ConfigLoader:
         }
 
         logging.config.dictConfig(logging_config_dict)
+        logger.debug("Logging configuration applied successfully")
+        logger.debug("Finished _setup_logging")
 
     def get_config(self):
         return self.config

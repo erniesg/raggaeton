@@ -1,0 +1,165 @@
+{
+  "Benefits": {
+    "description": "List and explain the benefits, with a flexible number of points.",
+    "details": {
+      "optional": [
+        "Benefit 3",
+        "Benefit 4",
+        "Benefit 5"
+      ],
+      "required": [
+        "Benefit 1",
+        "Benefit 2"
+      ]
+    }
+  },
+  "Conclusion": {
+    "description": "Restate thesis, optional supporting points, link back to introduction, implications, and clincher.",
+    "details": {
+      "optional": [
+        "Reiterate Supporting Points",
+        "Link Back to Introduction",
+        "Implications",
+        "Clincher"
+      ],
+      "required": [
+        "Restate Thesis"
+      ]
+    }
+  },
+  "Customer and Market Insights": {
+    "description": "Provide insights into customer behavior and market trends.",
+    "details": {
+      "required": [
+        "Customer Behavior Insights"
+      ]
+    }
+  },
+  "Detailed Analysis": {
+    "description": "Highlight main financial outcomes with supporting data and optional visual aids.",
+    "details": {
+      "optional": [
+        "Visual Aid Placeholder"
+      ],
+      "required": [
+        "Primary Achievement or Setback",
+        "Supporting Data"
+      ]
+    }
+  },
+  "Expert Opinions and Future Outlook": {
+    "description": "Include insights from industry experts and discuss future strategies.",
+    "details": {
+      "required": [
+        "Analyst Quotes",
+        "Predictions and Future Plans"
+      ]
+    }
+  },
+  "Introduction": {
+    "description": "Hook to capture attention, optional background information, and thesis statement.",
+    "details": {
+      "optional": [
+        "Background Information",
+        "Thesis Statement"
+      ],
+      "required": [
+        "Hook"
+      ]
+    }
+  },
+  "List of Items": {
+    "description": "Describe a list of items, with a flexible number of items.",
+    "details": {
+      "optional": [
+        "Item 3",
+        "Item 4",
+        "Item 5",
+        "Item 6",
+        "Item 7",
+        "Item 8",
+        "Item 9",
+        "Item 10"
+      ],
+      "required": [
+        "Item 1",
+        "Item 2"
+      ]
+    }
+  },
+  "Macro Factors / Economic Environment": {
+    "description": "Discuss the broader economic environment and its impact on the company.",
+    "details": {
+      "required": [
+        "Economic Environment Impact"
+      ]
+    }
+  },
+  "Operational Efficiency": {
+    "description": "Discuss the company's operational efficiency and improvements.",
+    "details": {
+      "required": [
+        "Operational Improvements"
+      ]
+    }
+  },
+  "Overview of the Topic": {
+    "description": "Summary of key points with optional visual aids.",
+    "details": {
+      "optional": [
+        "Visual Aid Placeholder"
+      ],
+      "required": [
+        "Summary of Key Points"
+      ]
+    }
+  },
+  "Steps to Achieve the Goal": {
+    "description": "Step-by-step guide to achieve the goal, with a flexible number of steps.",
+    "details": {
+      "optional": [
+        "Step 3",
+        "Step 4",
+        "Step 5"
+      ],
+      "required": [
+        "Step 1",
+        "Step 2"
+      ]
+    }
+  },
+  "Strategic Initiatives and Market Position": {
+    "description": "Discuss company strategy, market position, and optional competitor comparison.",
+    "details": {
+      "optional": [
+        "Competitor Comparison"
+      ],
+      "required": [
+        "Company Strategy",
+        "Market Position"
+      ]
+    }
+  },
+  "Technology and Innovation": {
+    "description": "Highlight the company's technological advancements and innovations.",
+    "details": {
+      "required": [
+        "Technological Advancements"
+      ]
+    }
+  },
+  "Tips for Implementation": {
+    "description": "Practical tips for implementation, with a flexible number of tips.",
+    "details": {
+      "optional": [
+        "Tip 3",
+        "Tip 4",
+        "Tip 5"
+      ],
+      "required": [
+        "Tip 1",
+        "Tip 2"
+      ]
+    }
+  }
+}

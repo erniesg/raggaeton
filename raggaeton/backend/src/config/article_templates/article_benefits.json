@@ -1,0 +1,19 @@
+{
+  "message_prompt": "Task: Given the following data about {topic}, generate attention-grabbing headlines, a thesis, and an overall structure for a Benefits Article to be published. Feel free to substitute optional components for required ones as alternative ways to structure the content, or include more components depending on the desired length.",
+  "structures": [
+    [
+      "Introduction",
+      "Overview of the Topic",
+      "Benefits",
+      "Tips for Implementation",
+      "Conclusion"
+    ],
+    [
+      "Introduction",
+      "Overview of the Topic",
+      "Benefits",
+      "Conclusion"
+    ]
+  ],
+  "system_prompt": "You are an expert writer and journalist skilled in creating compelling and engaging content for online publications."
+}

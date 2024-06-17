@@ -1,0 +1,39 @@
+{
+  "message_prompt": "Task: Given the following data about {company}, generate attention-grabbing headlines, a thesis, and an overall structure for a financial performance summary of the company to be published on {date_gmt}.",
+  "structures": [
+    [
+      "Introduction",
+      "Overview of Recent Performance",
+      "Detailed Analysis",
+      "Strategic Initiatives and Market Position",
+      "Conclusion"
+    ],
+    [
+      "Introduction",
+      "Overview of Recent Performance",
+      "Detailed Analysis",
+      "Macro Factors / Economic Environment",
+      "Strategic Initiatives and Market Position",
+      "Expert Opinions and Future Outlook",
+      "Conclusion"
+    ],
+    [
+      "Introduction",
+      "Overview of Recent Performance",
+      "Strategic Initiatives and Market Position",
+      "Detailed Analysis",
+      "Operational Efficiency",
+      "Conclusion"
+    ],
+    [
+      "Introduction",
+      "Overview of Recent Performance",
+      "Technology and Innovation",
+      "Detailed Analysis",
+      "Strategic Initiatives and Market Position",
+      "Expert Opinions and Future Outlook",
+      "Conclusion"
+    ]
+  ],
+  "system_prompt": "You are a Tech Journalist for an online publication."
+}
