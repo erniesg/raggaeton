@@ -1,6 +1,7 @@
 import yaml
 import os
 import json
+import random
 from raggaeton.backend.src.utils.common import find_project_root, logger
 from raggaeton.backend.src.utils.error_handler import error_handling_context
 
@@ -18,6 +19,14 @@ content_blocks_path = os.path.join(
     "article_templates",
     "content_blocks.json",
 )
+textfx_examples_path = os.path.join(
+    base_dir,
+    "raggaeton",
+    "backend",
+    "src",
+    "config",
+    "textfx_examples.json",
+)
 
 
 def load_yaml(file_path):
@@ -32,6 +41,7 @@ def load_json(file_path):
 
 config = load_yaml(config_path)
 content_blocks = load_json(content_blocks_path)
+textfx_examples = load_json(textfx_examples_path)
 
 prompts = {}
 for file_name in os.listdir(prompts_dir):
@@ -62,6 +72,41 @@ def get_content_block_suggestions(structures):
     return suggestions
 
 
+def get_textfx_examples():
+    examples = []
+    for method, data in textfx_examples.items():
+        selected_examples = random.sample(
+            data["examples"], 3
+        )  # Take 3 random examples for each method
+        formatted_examples = {
+            "method": method,
+            "preamble": data["preamble"],
+            "prefixes": data["prefixes"],
+            "examples": selected_examples,
+        }
+        examples.append(formatted_examples)
+    return examples
+
+
+def format_textfx_instructions(textfx_examples):
+    instructions = []
+    for example in textfx_examples:
+        method = example["method"]
+        preamble = example["preamble"]
+        prefixes = example["prefixes"]
+        examples = example["examples"]
+
+        formatted_example = f"{method}:\n{preamble}\n"
+        for prefix, ex in zip(prefixes, examples):
+            if isinstance(ex, list):
+                ex = " - ".join(
+                    map(str, ex)
+                )  # Ensure all items in the list are strings
+            formatted_example += f"{prefix} {ex}\n"
+        instructions.append(formatted_example)
+    return "\n".join(instructions)
+
+
 def get_optional_params(params, **kwargs):
     # Ensure 'optional_params' is included in params
     if "optional_params" not in params:
@@ -81,7 +126,6 @@ def get_optional_params(params, **kwargs):
     for key in optional_keys:
         if key not in params["optional_params"]:
             params["optional_params"][key] = None
-            # params["optional_params"][key] = ""
 
     # Include additional keyword arguments
     params.update(kwargs)
@@ -99,6 +143,8 @@ def prepare_params(params):
                 draft_outlines_str += f"  Details: {block['details']}\n"
             if "topic_sentences" in block:
                 draft_outlines_str += f"  Topic Sentences: {block['topic_sentences']}\n"
+            if "paragraphs" in block:
+                draft_outlines_str += f"  Paragraphs: {block['paragraphs']}\n"
         params["draft_outlines"] = draft_outlines_str
     return params
 
@@ -123,6 +169,15 @@ def get_prompts(function_name, request, **kwargs):
 
     # Prepare params by including nested keys
     params = prepare_params(params)
+
+    # Conditionally include textfx examples for edit_flair
+    if params.get("edit_type") == "edit_flair":
+        textfx_examples = get_textfx_examples()
+        textfx_instructions = format_textfx_instructions(textfx_examples)
+        params["textfx_instructions"] = textfx_instructions
+        logger.debug(f"TextFX Instructions: {textfx_instructions}")
+    else:
+        params["textfx_instructions"] = ""
 
     with error_handling_context():
         message_prompt = prompts[function_name]["message_prompt"].format(**params)

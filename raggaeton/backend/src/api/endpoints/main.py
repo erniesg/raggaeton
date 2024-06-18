@@ -14,6 +14,9 @@ from raggaeton.backend.src.api.endpoints.generate_topic_sentences import (
 from raggaeton.backend.src.api.endpoints.generate_full_content import (
     router as generate_full_content_router,
 )
+from raggaeton.backend.src.api.endpoints.edit_content import (
+    router as edit_content_router,
+)
 
 app = FastAPI()
 
@@ -33,6 +36,9 @@ app.include_router(
 
 # Include the router for the generate_full_content endpoints
 app.include_router(generate_full_content_router, prefix="/api", tags=["full_content"])
+
+# Include the router for the edit_content endpoints
+app.include_router(edit_content_router, prefix="/api", tags=["edit_content"])
 
 
 @app.get("/")

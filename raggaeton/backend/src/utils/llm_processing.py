@@ -5,6 +5,7 @@ from raggaeton.backend.src.schemas.content import (
     GenerateDraftResponse,
     GenerateTopicSentencesResponse,
     GenerateFullContentResponse,
+    EditContentResponse,
 )
 from raggaeton.backend.src.utils.common import logger
 from raggaeton.backend.src.utils.error_handler import error_handling_context
@@ -173,6 +174,22 @@ def parse_llm_response(
                 )
                 logger.info(
                     "Successfully parsed response into GenerateFullContentResponse model"
+                )
+                return transformed_response
+            except ValidationError as e:
+                logger.error(f"Validation error: {e}")
+                raise
+            except Exception as e:
+                logger.error(f"Error parsing JSON response: {e}")
+                raise
+        elif request_type == "edit_content":
+            try:
+                logger.info("Attempting to parse JSON into EditContentResponse model")
+                transformed_response = EditContentResponse.model_validate_json(
+                    json.dumps(json_data)
+                )
+                logger.info(
+                    "Successfully parsed response into EditContentResponse model"
                 )
                 return transformed_response
             except ValidationError as e:

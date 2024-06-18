@@ -76,3 +76,18 @@ class GenerateFullContentRequest(Draft):
 
 class GenerateFullContentResponse(BaseModel):
     full_content: List[Paragraph]  # Use Paragraph to include paragraphs
+
+
+class EditContentRequest(Draft):
+    full_content_request: Optional[GenerateFullContentRequest] = None
+    full_content_response: Optional[GenerateFullContentResponse] = None
+    edit_type: str  # "structure" or "flair"
+
+
+class EditedContentBlock(ContentBlock):
+    topic_sentences: Optional[List[str]] = None
+    paragraphs: Optional[List[str]] = None
+
+
+class EditContentResponse(BaseModel):
+    edited_content: List[EditedContentBlock]

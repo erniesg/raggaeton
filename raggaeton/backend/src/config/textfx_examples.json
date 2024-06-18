@@ -42,7 +42,11 @@
         "Personal Identification Number"
       ]
     ],
-    "preamble": "An acronym is a word formed from the initial letters of a phrase. Below are some examples of creative acronyms."
+    "preamble": "An acronym is a word formed from the initial letters of a phrase. Below are some examples of creative acronyms.",
+    "prefixes": [
+      "Here is an acronym that uses the letters of the word",
+      ""
+    ]
   },
   "ALLITERATION": {
     "examples": [
@@ -97,7 +101,12 @@
         "fern, fuchsia, fiddle-leaf fig, philodendron, phlox"
       ]
     ],
-    "preamble": ""
+    "preamble": "",
+    "prefixes": [
+      "Here is a topic",
+      "Here are some examples of words that are related to that topic and start with the letter(s)",
+      ""
+    ]
   },
   "CHAIN": {
     "examples": [
@@ -150,7 +159,11 @@
         "mini golf, hole, ground, dirt, shovel, snow, ice, cube"
       ]
     ],
-    "preamble": "A word chain is a sequence of eight words where each word in the sequence is semantically related to the word that precedes it."
+    "preamble": "A word chain is a sequence of eight words where each word in the sequence is semantically related to the word that precedes it.",
+    "prefixes": [
+      "Here is an example of a word chain beginning with",
+      ""
+    ]
   },
   "EXPLODE": {
     "examples": [
@@ -359,7 +372,11 @@
         "auto Matt sick (Matt instantly becomes ill)"
       ]
     ],
-    "preamble": "A same-sounding phrase is a phrase that sounds like another word or phrase."
+    "preamble": "A same-sounding phrase is a phrase that sounds like another word or phrase.",
+    "prefixes": [
+      "Here is a word that sounds like",
+      ""
+    ]
   },
   "FUSE": {
     "examples": [
@@ -409,7 +426,11 @@
         "Both a baby and a gun can be associated with a sense of risk and danger\u2014a baby by its need to be handled with care to prevent injury or harm, and a gun by its ability to cause great harm in the wrong hands."
       ]
     ],
-    "preamble": "One way to practice creative thinking is to identify connections between seemingly unrelated things. For each pair of things below, we provide a creative example of something that both things have in common. Each connection is novel and unexpected, rather than an unoriginal technicality."
+    "preamble": "One way to practice creative thinking is to identify connections between seemingly unrelated things. For each pair of things below, we provide a creative example of something that both things have in common. Each connection is novel and unexpected, rather than an unoriginal technicality.",
+    "prefixes": [
+      "Here is a connection between",
+      ""
+    ]
   },
   "POV": {
     "examples": [
@@ -459,7 +480,11 @@
         ]
       ]
     ],
-    "preamble": "A 'hot take' is a perspective that is novel and thought-provoking. Some hot takes are lighthearted and humorous, while others may be provocative or polarizing."
+    "preamble": "A 'hot take' is a perspective that is novel and thought-provoking. Some hot takes are lighthearted and humorous, while others may be provocative or polarizing.",
+    "prefixes": [
+      "Here is a hot take on",
+      ""
+    ]
   },
   "SCENE": {
     "examples": [
@@ -524,7 +549,11 @@
         ]
       ]
     ],
-    "preamble": "Sensory details are details that appeal to the five senses: vision, hearing, touch, smell, and taste. Sensory details make our writing more interesting and vivid, and the most effective sensory details are ones that are creative yet concrete and evocative. For each thing below, we provide a list of sensory details that evoke that thing."
+    "preamble": "Sensory details are details that appeal to the five senses: vision, hearing, touch, smell, and taste. Sensory details make our writing more interesting and vivid, and the most effective sensory details are ones that are creative yet concrete and evocative. For each thing below, we provide a list of sensory details that evoke that thing.",
+    "prefixes": [
+      "Here are some sensory details for",
+      ""
+    ]
   },
   "SIMILE": {
     "examples": [
@@ -585,7 +614,11 @@
         "Her beauty hangs upon the cheek of night, like a rich jewel in an Ethiop's ear."
       ]
     ],
-    "preamble": "A good simile contains a concrete image that illustrates the concept we want to convey without being too obvious. Good similes are unexpected and evocative. Below are some examples of good similes."
+    "preamble": "A good simile contains a concrete image that illustrates the concept we want to convey without being too obvious. Good similes are unexpected and evocative. Below are some examples of good similes.",
+    "prefixes": [
+      "Here is a concept",
+      "Here is a simile that illustrates it"
+    ]
   },
   "UNEXPECT": {
     "examples": [
@@ -638,7 +671,11 @@
         "playing soccer with a bowling ball on a field that is made out of Lego bricks"
       ]
     ],
-    "preamble": "For each scene below, we provide an example of how you can incorporate additional details to give that scene an unexpected twist."
+    "preamble": "For each scene below, we provide an example of how you can incorporate additional details to give that scene an unexpected twist.",
+    "prefixes": [
+      "Here is an unexpected twist for",
+      ""
+    ]
   },
   "UNFOLD": {
     "examples": [
@@ -897,6 +934,10 @@
         ]
       ]
     ],
-    "preamble": ""
+    "preamble": "",
+    "prefixes": [
+      "Here is a target word",
+      "Here are some ways the target word appears in other words and phrases"
+    ]
   }
 }

@@ -28,6 +28,9 @@ class LLMHandler:
 
     def call_llm(self, function_name, request, model_name=None, **kwargs):
         logger.info(f"LLM Handler - Received kwargs in call_llm: {kwargs}")
+        # Ensure edit_type is included in kwargs if present in request
+        if hasattr(request, "edit_type"):
+            kwargs["edit_type"] = request.edit_type
 
         system_prompt, message_prompt = get_prompts(function_name, request, **kwargs)
         logger.info(f"System Prompt: {system_prompt}")
