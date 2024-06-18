@@ -39,9 +39,40 @@ class Draft(BaseModel):
     hook: str
     thesis: str
     article_type: str
-    structure: List[ContentBlock]
+    draft_outlines: List[ContentBlock]
     optional_params: Optional[OptionalParams] = None
 
 
 class GenerateDraftResponse(BaseModel):
     drafts: List[Draft]
+
+
+class GenerateTopicSentencesRequest(Draft):
+    # Inherits all fields from Draft
+    pass
+
+
+class TopicSentence(ContentBlock):
+    # Inherits all fields from ContentBlock
+    topic_sentences: List[str]  # Explicitly add topic_sentences
+
+
+class GenerateTopicSentencesResponse(BaseModel):
+    draft_outlines: List[
+        TopicSentence
+    ]  # Use TopicSentence to include details and topic_sentences
+
+
+class Paragraph(TopicSentence):
+    # Inherits all fields from TopicSentence
+    paragraphs: List[str]  # Add paragraphs field
+
+
+class GenerateFullContentRequest(Draft):
+    draft_outlines: List[
+        TopicSentence
+    ]  # Use TopicSentence to include details and topic_sentences
+
+
+class GenerateFullContentResponse(BaseModel):
+    full_content: List[Paragraph]  # Use Paragraph to include paragraphs

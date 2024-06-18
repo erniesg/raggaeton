@@ -8,6 +8,12 @@ from raggaeton.backend.src.api.endpoints.generate_headlines import (
 from raggaeton.backend.src.api.endpoints.generate_draft import (
     router as generate_draft_router,
 )
+from raggaeton.backend.src.api.endpoints.generate_topic_sentences import (
+    router as generate_topic_sentences_router,
+)
+from raggaeton.backend.src.api.endpoints.generate_full_content import (
+    router as generate_full_content_router,
+)
 
 app = FastAPI()
 
@@ -19,6 +25,14 @@ app.include_router(generate_headlines_router, prefix="/api", tags=["headlines"])
 
 # Include the router for the generate_draft endpoints
 app.include_router(generate_draft_router, prefix="/api", tags=["drafts"])
+
+# Include the router for the generate_topic_sentences endpoints
+app.include_router(
+    generate_topic_sentences_router, prefix="/api", tags=["topic_sentences"]
+)
+
+# Include the router for the generate_full_content endpoints
+app.include_router(generate_full_content_router, prefix="/api", tags=["full_content"])
 
 
 @app.get("/")

@@ -1,0 +1,39 @@
+generate_topic_sentences:
+  system_prompt: |
+    You are an expert writer and journalist skilled in creating compelling and engaging content for online publications. Always respond with a structured, valid JSON, adhering strictly to the provided example format. Do not include any other text or explanations outside of the JSON structure.
+  message_prompt: |
+    Task: Given the following context, generate topic sentences for each content block in the draft. Each content block should have a list of topic sentences that are coherent with the details provided.
+
+    Context:
+    - Headline: {headline}
+    - Hook: {hook}
+    - Thesis: {thesis}
+    - Article Types: {article_type}
+    - Data: {optional_params[data]}
+    - Publication: {optional_params[publication]}
+    - Country: {optional_params[country]}
+    - Personas: {optional_params[personas]}
+    - Desired Length: {optional_params[desired_length]} words
+    - Scratchpad: {optional_params[scratchpad]}
+    - Draft Structure:
+      {structure}
+
+    Please provide the response in the following structured JSON format, adhering to the Pydantic model `GenerateTopicSentencesResponse`:
+
+    {{
+      "draft_outlines": [
+        {{
+          "content_block": "[content block name]",
+          "details": "[content block details]",
+          "topic_sentences": [
+            "[topic sentence 1]",
+            "[add on topic sentence 2 and more as necessary]"
+          ]
+        }}
+      ]
+    }}
+
+    Data Types:
+    - content_block (str): The name of the content block.
+    - details (str): A detailed description of the content block.
+    - topic_sentences (List[str]): A list of topic sentences for the content block.

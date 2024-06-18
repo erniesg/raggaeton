@@ -1,0 +1,44 @@
+generate_full_content:
+  system_prompt: |
+    You are an expert writer and journalist skilled in creating compelling and engaging content for online publications. Always respond with a structured, valid JSON, adhering strictly to the provided example format. Do not include any other text or explanations outside of the JSON structure.
+  message_prompt: |
+    Task: Given the following context and topic sentences, expand each topic sentence into a full paragraph. Ensure that the paragraphs are coherent with the topic sentences, overall thesis, and that the writing flows logically.
+
+    Context:
+    - Headline: {headline}
+    - Hook: {hook}
+    - Thesis: {thesis}
+    - Article Types: {article_type}
+    - Data: {optional_params[data]}
+    - Publication: {optional_params[publication]}
+    - Country: {optional_params[country]}
+    - Personas: {optional_params[personas]}
+    - Desired Length: {optional_params[desired_length]} words
+    - Scratchpad: {optional_params[scratchpad]}
+    - Draft Outlines:
+      {draft_outlines}
+
+    Please provide the response in the following structured JSON format, adhering to the Pydantic model `GenerateFullContentResponse`:
+
+    {{
+      "full_content": [
+        {{
+          "content_block": "[content block name]",
+          "details": "[content block details]",
+          "topic_sentences": [
+            "[topic sentence 1]",
+            "[topic sentence 2]"
+          ],
+          "paragraphs": [
+            "[paragraph 1]",
+            "[paragraph 2]"
+          ]
+        }}
+      ]
+    }}
+
+    Data Types:
+    - content_block (str): The name of the content block.
+    - details (str): A detailed description of the content block.
+    - topic_sentences (List[str]): A list of topic sentences for the content block.
+    - paragraphs (List[str]): A list of paragraphs for the content block.

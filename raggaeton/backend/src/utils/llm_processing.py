@@ -3,6 +3,8 @@ from raggaeton.backend.src.schemas.research import GenerateResearchQuestionsResp
 from raggaeton.backend.src.schemas.content import (
     GenerateHeadlinesResponse,
     GenerateDraftResponse,
+    GenerateTopicSentencesResponse,
+    GenerateFullContentResponse,
 )
 from raggaeton.backend.src.utils.common import logger
 from raggaeton.backend.src.utils.error_handler import error_handling_context
@@ -133,6 +135,44 @@ def parse_llm_response(
                 )
                 logger.info(
                     f"Successfully parsed response into GenerateDraftResponse model for {request_type}"
+                )
+                return transformed_response
+            except ValidationError as e:
+                logger.error(f"Validation error: {e}")
+                raise
+            except Exception as e:
+                logger.error(f"Error parsing JSON response: {e}")
+                raise
+        elif request_type == "generate_topic_sentences":
+            try:
+                logger.info(
+                    "Attempting to parse JSON into GenerateTopicSentencesResponse model"
+                )
+                transformed_response = (
+                    GenerateTopicSentencesResponse.model_validate_json(
+                        json.dumps(json_data)
+                    )
+                )
+                logger.info(
+                    "Successfully parsed response into GenerateTopicSentencesResponse model"
+                )
+                return transformed_response
+            except ValidationError as e:
+                logger.error(f"Validation error: {e}")
+                raise
+            except Exception as e:
+                logger.error(f"Error parsing JSON response: {e}")
+                raise
+        elif request_type == "generate_full_content":
+            try:
+                logger.info(
+                    "Attempting to parse JSON into GenerateFullContentResponse model"
+                )
+                transformed_response = GenerateFullContentResponse.model_validate_json(
+                    json.dumps(json_data)
+                )
+                logger.info(
+                    "Successfully parsed response into GenerateFullContentResponse model"
                 )
                 return transformed_response
             except ValidationError as e:

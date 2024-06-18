@@ -88,6 +88,21 @@ def get_optional_params(params, **kwargs):
     return {k: v for k, v in params.items() if v is not None}
 
 
+def prepare_params(params):
+    # Ensure nested keys like 'content_block', 'details', 'topic_sentences', and 'paragraphs' are included in params
+    if "draft_outlines" in params:
+        draft_outlines_str = ""
+        for block in params["draft_outlines"]:
+            if "content_block" in block:
+                draft_outlines_str += f"- Content Block: {block['content_block']}\n"
+            if "details" in block:
+                draft_outlines_str += f"  Details: {block['details']}\n"
+            if "topic_sentences" in block:
+                draft_outlines_str += f"  Topic Sentences: {block['topic_sentences']}\n"
+        params["draft_outlines"] = draft_outlines_str
+    return params
+
+
 def get_prompts(function_name, request, **kwargs):
     logger.info(f"Get Prompts - Received request {request} with kwargs: {kwargs}")
 
@@ -105,6 +120,9 @@ def get_prompts(function_name, request, **kwargs):
     content_block_suggestions = (
         get_content_block_suggestions(structures) if structures else []
     )
+
+    # Prepare params by including nested keys
+    params = prepare_params(params)
 
     with error_handling_context():
         message_prompt = prompts[function_name]["message_prompt"].format(**params)
