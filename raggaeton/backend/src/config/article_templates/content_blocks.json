@@ -27,11 +27,35 @@
       ]
     }
   },
+  "Cultural Insights": {
+    "description": "Provide insights into the local culture, traditions, and customs.",
+    "details": {
+      "optional": [
+        "Local Traditions",
+        "Festivals"
+      ],
+      "required": [
+        "Cultural Practices"
+      ]
+    }
+  },
   "Customer and Market Insights": {
     "description": "Provide insights into customer behavior and market trends.",
     "details": {
       "required": [
         "Customer Behavior Insights"
+      ]
+    }
+  },
+  "Destination Overview": {
+    "description": "Provide an overview of the destination, including key highlights.",
+    "details": {
+      "optional": [
+        "Brief History",
+        "Geographical Information"
+      ],
+      "required": [
+        "Key Highlights"
       ]
     }
   },
@@ -53,6 +77,44 @@
       "required": [
         "Analyst Quotes",
         "Predictions and Future Plans"
+      ]
+    }
+  },
+  "Getting There and Around": {
+    "description": "Provide information on how to get to the destination and how to get around once there.",
+    "details": {
+      "optional": [
+        "Local Transportation",
+        "Travel Tips"
+      ],
+      "required": [
+        "Travel Routes"
+      ]
+    }
+  },
+  "Hiking Trails": {
+    "description": "Describe the hiking trails available at the destination.",
+    "details": {
+      "optional": [
+        "Trail 3",
+        "Trail 4",
+        "Trail 5"
+      ],
+      "required": [
+        "Trail 1",
+        "Trail 2"
+      ]
+    }
+  },
+  "Historical Background": {
+    "description": "Provide historical context and background of the destination.",
+    "details": {
+      "optional": [
+        "Historical Figures",
+        "Important Dates"
+      ],
+      "required": [
+        "Key Historical Events"
       ]
     }
   },
@@ -95,6 +157,20 @@
       ]
     }
   },
+  "Main Attractions": {
+    "description": "List and describe the main attractions of the destination.",
+    "details": {
+      "optional": [
+        "Attraction 3",
+        "Attraction 4",
+        "Attraction 5"
+      ],
+      "required": [
+        "Attraction 1",
+        "Attraction 2"
+      ]
+    }
+  },
   "Operational Efficiency": {
     "description": "Discuss the company's operational efficiency and improvements.",
     "details": {
@@ -111,6 +187,58 @@
       ],
       "required": [
         "Summary of Key Points"
+      ]
+    }
+  },
+  "Personal Circumstances": {
+    "description": "Describe the personal context or circumstances of the traveler.",
+    "details": {
+      "optional": [
+        "Travel Companions",
+        "Personal Challenges"
+      ],
+      "required": [
+        "Personal Background",
+        "Reason for Travel"
+      ]
+    }
+  },
+  "Personality and Encounters": {
+    "description": "Highlight personal experiences and encounters with locals or other travelers.",
+    "details": {
+      "optional": [
+        "Cultural Interactions",
+        "Unexpected Events"
+      ],
+      "required": [
+        "Memorable Encounters",
+        "Personal Reflections"
+      ]
+    }
+  },
+  "Preparation and Packing": {
+    "description": "Provide tips on how to prepare and what to pack for the trip.",
+    "details": {
+      "optional": [
+        "Packing List",
+        "Travel Documents"
+      ],
+      "required": [
+        "Essential Items",
+        "Preparation Tips"
+      ]
+    }
+  },
+  "Setting the Scene": {
+    "description": "Introduce the setting with vivid descriptions to immerse the reader.",
+    "details": {
+      "optional": [
+        "Time of Day",
+        "Weather Conditions"
+      ],
+      "required": [
+        "Location Description",
+        "Atmosphere"
       ]
     }
   },

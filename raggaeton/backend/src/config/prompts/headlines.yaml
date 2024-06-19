@@ -7,6 +7,7 @@ generate_headlines:
     Context:
     - Topics: {topics}
     - Article Types: {article_types}
+    - Context: {context}
     - Data: {optional_params[data]}
     - Publication: {optional_params[publication]}
     - Country: {optional_params[country]}
@@ -20,19 +21,19 @@ generate_headlines:
       "headlines": [
         {{
           "headline": "Sample headline 1",
-          "article_type": "benefits",
+          "article_type": "{article_types}",
           "hook": "Sample hook 1",
           "thesis": "Sample thesis 1"
         }},
         {{
           "headline": "Sample headline 2",
-          "article_type": "benefits",
+          "article_type": "{article_types}",
           "hook": "Sample hook 2",
           "thesis": "Sample thesis 2"
         }},
         {{
           "headline": "Sample headline 3",
-          "article_type": "benefits",
+          "article_type": "{article_types}",
           "hook": "Sample hook 3",
           "thesis": "Sample thesis 3"
         }}

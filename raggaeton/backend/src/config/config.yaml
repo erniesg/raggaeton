@@ -60,3 +60,5 @@ logging:
 gcs:
   bucket_name: "raggaeton"
   index_path: "indexes"
+
+obsidian_vault: "/Users/erniesg/Documents/Obsidian Vault"

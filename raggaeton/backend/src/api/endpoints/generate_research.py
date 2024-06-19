@@ -9,9 +9,14 @@ from raggaeton.backend.src.api.services.llm_handler import LLMHandler
 from raggaeton.backend.src.api.services.fetch import (
     fetch_data_from_you,
     fetch_data_from_wikipedia,
+    fetch_data_from_obsidian,
 )
 from raggaeton.backend.src.api.services.prompts import get_prompts
-from raggaeton.backend.src.utils.common import logger, error_handling_context
+from raggaeton.backend.src.utils.common import (
+    logger,
+    error_handling_context,
+    config_loader,
+)
 
 router = APIRouter()
 
@@ -57,6 +62,11 @@ async def do_research(request: DoResearchRequest):
             elif platform == "wikipedia":
                 research_results[platform] = fetch_data_from_wikipedia(
                     keywords, limit=request.optional_params.desired_length
+                )
+            elif platform == "obsidian":
+                obsidian_vault_path = config_loader.config["obsidian_vault"]
+                research_results[platform] = fetch_data_from_obsidian(
+                    obsidian_vault_path, author="John Doe"
                 )
             # Add more platforms as needed
         return DoResearchResponse(fetched_research=research_results)

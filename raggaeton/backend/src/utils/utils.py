@@ -15,6 +15,11 @@ import random
 logger = logging.getLogger(__name__)
 
 
+# Add this function to truncate log messages
+def truncate_log_message(message: str, length: int = 500) -> str:
+    return message if len(message) <= length else message[:length] + "..."
+
+
 def check_package_installed(package_name: str) -> bool:
     import importlib.util
 

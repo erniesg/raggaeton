@@ -8,13 +8,13 @@ logger = logging.getLogger(__name__)
 # Ensure the configuration and secrets are loaded
 config = config_loader.get_config()
 secrets = config_loader.secrets
-logger.info(f"Config keys: {list(config.keys())}")
-logger.info(f"Secrets keys: {list(secrets.keys())}")
+logger.debug(f"Config keys: {list(config.keys())}")
+logger.debug(f"Secrets keys: {list(secrets.keys())}")
 
 SUPABASE_URL = config.get("table_url")
 SUPABASE_KEY = secrets.get("SUPABASE_KEY")
-logger.info(f"SUPABASE_URL: {SUPABASE_URL[:8]}... (truncated)")
-logger.info(f"SUPABASE_KEY: {SUPABASE_KEY[:8]}... (truncated)")
+logger.debug(f"SUPABASE_URL: {SUPABASE_URL[:8]}... (truncated)")
+logger.debug(f"SUPABASE_KEY: {SUPABASE_KEY[:8]}... (truncated)")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ConfigurationError("SUPABASE_URL and SUPABASE_KEY are required")

@@ -1,0 +1,50 @@
+generate_draft_travel:
+  system_prompt: |
+    You are an expert travel writer skilled in creating compelling and engaging content for online publications. Always respond with a structured, valid JSON, adhering strictly to the provided example format. Do not include any other text or explanations outside of the JSON structure.
+  message_prompt: |
+    Task: Given the following context, generate an updated structure for a Travel Article to be published.
+
+    Context:
+    - Headline: {headline}
+    - Hook: {hook}
+    - Thesis: {thesis}
+    - Article Types: {article_type}
+    - Data: {optional_params[data]}
+    - Publication: {optional_params[publication]}
+    - Country: {optional_params[country]}
+    - Personas: {optional_params[personas]}
+    - Desired Length: {optional_params[desired_length]} words
+    - Scratchpad: {optional_params[scratchpad]}
+
+    You may use the possible structures below as a starting point. Each structure is composed of content blocks. Rewrite, reorder, substitute, remove, add new or simply flesh out further details for the structure and content blocks so as to be coherent with your headline, hook and thesis.
+
+    Please provide the response in the following structured JSON format:
+
+    {{
+      "structure": [
+        {{
+          "content_block": "Introduction",
+          "details": "[Content Block Details]"
+        }},
+        {{
+          "content_block": "Personal Circumstances",
+          "details": "[Content Block Details]"
+        }},
+        {{
+          "content_block": "Destination Overview",
+          "details": "[Content Block Details]"
+        }},
+        {{
+          "content_block": "Main Attractions",
+          "details": "[Content Block Details]"
+        }},
+        {{
+          "content_block": "Conclusion",
+          "details": "[Content Block Details]"
+        }}
+      ]
+    }}
+  structures:
+    - ["Introduction", "Personal Circumstances", "Destination Overview", "Main Attractions", "Conclusion"]
+    - ["Introduction", "Setting the Scene", "Historical Background", "Personality and Encounters", "Conclusion"]
+    - ["Introduction", "Setting the Scene", "Getting There and Around", "Hiking Trails", "Conclusion"]

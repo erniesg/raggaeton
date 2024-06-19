@@ -28,7 +28,6 @@ try:
 except FileNotFoundError:
     base_dir = "/root/raggaeton"  # Adjust this fallback path as needed for remote env
 
-# logger = logging.getLogger(__name__)
 logger.info(f"Base directory: {base_dir}")
 
 
@@ -208,7 +207,7 @@ class ConfigLoader:
         if enable_console:
             handlers["console"] = {
                 "class": "logging.StreamHandler",
-                "formatter": "default",
+                "formatter": "colored",
             }
 
         logging_config_dict = {
@@ -216,6 +215,17 @@ class ConfigLoader:
             "formatters": {
                 "default": {
                     "format": "%(asctime)s %(name)s %(levelname)s %(message)s",
+                },
+                "colored": {
+                    "()": "colorlog.ColoredFormatter",
+                    "format": "%(log_color)s%(asctime)s %(name)s %(levelname)s %(message)s",
+                    "log_colors": {
+                        "DEBUG": "cyan",
+                        "INFO": "green",
+                        "WARNING": "yellow",
+                        "ERROR": "red",
+                        "CRITICAL": "red,bg_white",
+                    },
                 },
             },
             "handlers": handlers,

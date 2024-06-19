@@ -2,7 +2,9 @@ import requests
 from datetime import datetime
 import uuid
 import os
+from raggaeton.backend.src.utils.utils import truncate_log_message
 from raggaeton.backend.src.utils.common import logger, error_handling_context
+from llama_index.readers.obsidian import ObsidianReader
 
 
 def fetch_data_from_you(keywords, limit=10, country="us", source="you_snippets"):
@@ -46,7 +48,9 @@ def fetch_data_from_you(keywords, limit=10, country="us", source="you_snippets")
                     "source": source,
                 }
             )
-        logger.info(f"Sample response from {source}: {data[0]}")
+        logger.info(
+            f"Sample response from {source}: {truncate_log_message(str(data[0]))}"
+        )
         return {"results": data}
 
 
@@ -79,7 +83,7 @@ def fetch_data_from_wikipedia(keywords, limit=10):
                     "https://en.wikipedia.org/w/api.php", params=parse_params
                 )
                 parse_data = parse_response.json()
-                logger.info(f"Parsed data: {parse_data}")
+                logger.debug(f"Parsed data: {parse_data}")
 
                 content = parse_data.get("parse", {}).get("text", {}).get("*", "")
                 if "From Wikipedia, the free encyclopedia" in content:
@@ -99,5 +103,41 @@ def fetch_data_from_wikipedia(keywords, limit=10):
                         "source": "wikipedia",
                     }
                 )
-                logger.info(f"Appended data: {wikipedia_data[-1]}")
+                logger.info(
+                    f"Appended data: {truncate_log_message(str(wikipedia_data[-1]))}"
+                )
         return {"results": wikipedia_data}
+
+
+def fetch_data_from_obsidian(vault_path, **kwargs):
+    with error_handling_context():
+        obsidian_reader = ObsidianReader(input_dir=vault_path)
+        documents = obsidian_reader.load_data()
+
+        obsidian_data = []
+        for doc in documents:
+            # Extract the first heading as the title if available
+            title = "Untitled"
+            for line in doc.text.splitlines():
+                if line.startswith("#"):
+                    title = line.lstrip("#").strip()
+                    break
+
+            obsidian_data.append(
+                {
+                    "id": str(uuid.uuid4()),
+                    "title": title,
+                    "date_fetched": datetime.utcnow().isoformat(),
+                    "created_at": kwargs.get(
+                        "created_at", datetime.utcnow().isoformat()
+                    ),
+                    "author": kwargs.get("author", "N/A"),
+                    "raw_content": doc.text,
+                    "url": doc.metadata.get("source", "N/A"),
+                    "source": "obsidian",
+                }
+            )
+        logger.info(
+            f"Sample response from Obsidian: {truncate_log_message(str(obsidian_data[0]))}"
+        )
+        return {"results": obsidian_data}
