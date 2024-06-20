@@ -49,9 +49,10 @@ class GenerateDraftResponse(BaseModel):
     drafts: List[Draft]
 
 
-class GenerateTopicSentencesRequest(Draft):
-    # Inherits all fields from Draft
-    pass
+class GenerateTopicSentencesRequest(GenerateDraftRequest):
+    topics: List[str]
+    context: Optional[Dict[str, Any]] = None
+    draft_outlines: List[ContentBlock]  # Ensure this field is included
 
 
 class TopicSentence(ContentBlock):
@@ -70,7 +71,7 @@ class Paragraph(TopicSentence):
     paragraphs: List[str]  # Add paragraphs field
 
 
-class GenerateFullContentRequest(Draft):
+class GenerateFullContentRequest(GenerateDraftRequest):
     draft_outlines: List[
         TopicSentence
     ]  # Use TopicSentence to include details and topic_sentences
@@ -80,10 +81,11 @@ class GenerateFullContentResponse(BaseModel):
     full_content: List[Paragraph]  # Use Paragraph to include paragraphs
 
 
-class EditContentRequest(Draft):
+class EditContentRequest(GenerateDraftRequest):
     full_content_request: Optional[GenerateFullContentRequest] = None
     full_content_response: Optional[GenerateFullContentResponse] = None
     edit_type: str  # "structure" or "flair"
+    draft_outlines: Optional[List[ContentBlock]] = None  # Ensure this field is included
 
 
 class EditedContentBlock(ContentBlock):

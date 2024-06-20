@@ -13,6 +13,9 @@ from raggaeton.backend.src.db.supabase import upsert_data, fetch_data
 from raggaeton.backend.src.schemas.content import (
     GenerateHeadlinesRequest,
     GenerateDraftRequest,
+    GenerateTopicSentencesRequest,
+    GenerateFullContentRequest,
+    EditContentRequest,
 )
 from llama_index.core import Document, Settings
 from raggaeton.backend.src.utils.common import (
@@ -49,7 +52,7 @@ def main():
         }
 
         # Step 1: Generate research questions for both you.com and Obsidian
-        logger.info("Generating research questions...")
+        logger.debug("Generating research questions...")
         research_request = GenerateResearchQuestionsRequest(
             topics=topics,
             article_types=article_types,
@@ -63,10 +66,10 @@ def main():
         )
         response.raise_for_status()
         research_questions_response = response.json()
-        logger.info("Generated Research Questions: %s", research_questions_response)
+        logger.debug("Generated Research Questions: %s", research_questions_response)
 
         # Step 2: Do research for both you.com and Obsidian
-        logger.info("Performing research...")
+        logger.debug("Performing research...")
         do_research_request = DoResearchRequest(
             research_questions=research_questions_response["research_questions"],
             optional_params=optional_params,
@@ -81,13 +84,13 @@ def main():
         logger.debug("Research Results: %s", research_results_response)
 
         # Step 3: Extract you.com and Obsidian snippets
-        logger.info("Extracting snippets...")
+        logger.debug("Extracting snippets...")
         you_com_data = (
             research_results_response.get("fetched_research", {})
             .get("you.com", {})
             .get("results", [])
         )
-        logger.info(
+        logger.debug(
             "Extracted you.com data: type=%s, length=%d, data=%s",
             type(you_com_data).__name__,
             len(you_com_data),
@@ -99,7 +102,7 @@ def main():
             .get("obsidian", {})
             .get("results", [])
         )
-        logger.info(
+        logger.debug(
             "Extracted Obsidian data: type=%s, length=%d, data=%s",
             type(obsidian_data).__name__,
             len(obsidian_data),
@@ -112,16 +115,16 @@ def main():
         upsert_data("research_results", obsidian_data)
 
         # Step 5: Retrieve data from Supabase
-        logger.info("Retrieving data from Supabase...")
+        logger.debug("Retrieving data from Supabase...")
         saved_research_results = fetch_data("research_results")
         logger.debug("Saved Research Results: %s", saved_research_results)
 
         # Step 6: Set document settings from config
-        logger.info("Setting document settings...")
+        logger.debug("Setting document settings...")
         set_document_settings()
 
         # Step 7: Prepare documents for indexing
-        logger.info("Preparing documents for indexing...")
+        logger.debug("Preparing documents for indexing...")
         documents = [
             Document(text=item["raw_content"], metadata=item)
             for item in saved_research_results
@@ -135,26 +138,26 @@ def main():
         )
 
         if os.path.exists(index_path):
-            logger.info(f"Index path exists: {index_path}")
+            logger.debug(f"Index path exists: {index_path}")
             ragatouille_pack = create_ragatouille_index(
                 documents, index_name, index_path=index_path
             )
         else:
-            logger.info("Index path does not exist. Creating new index...")
+            logger.debug("Index path does not exist. Creating new index...")
             ragatouille_pack = create_ragatouille_index(documents, index_name)
 
         # Step 9: Construct the query using the topics
-        logger.info("Constructing query...")
+        logger.debug("Constructing query...")
         query = construct_query(topics)
         nodes = retrieve_nodes(ragatouille_pack, query)
         logger.info("Nodes returned: %s", truncate_log_message(str(nodes), length=500))
         context = "\n".join([node.text for node in nodes])
 
         # Step 10: Generate headlines
-        logger.info("Generating headlines...")
+        logger.debug("Generating headlines...")
         headlines_request = GenerateHeadlinesRequest(
             article_types="travel",
-            topics=["Climbing Fu Gai Mountain in Zhejiang"],
+            topics=topics,
             context={"context": context},
             optional_params=optional_params,
         )
@@ -169,7 +172,7 @@ def main():
         logger.info("Generated Headlines: %s", headlines_response)
 
         # Step 11: Generate drafts for each headline
-        logger.info("Generating drafts for each headline...")
+        logger.debug("Generating drafts for each headline...")
         for headline_data in headlines_response["headlines"]:
             draft_request = GenerateDraftRequest(
                 topics=topics,
@@ -188,7 +191,7 @@ def main():
             )
             response.raise_for_status()
             draft_response = response.json()
-            logger.info("Generated Draft: %s", draft_response)
+            logger.debug("Generated Draft: %s", draft_response)
             logger.debug("Draft Response Type: %s", type(draft_response))
 
             # Log the raw response
@@ -197,6 +200,79 @@ def main():
             # Log the draft outlines specifically
             for draft in draft_response.get("drafts", []):
                 logger.debug("Draft Outlines: %s", draft.get("draft_outlines", []))
+
+                # Step 12: Generate topic sentences for each draft
+                logger.debug("Generating topic sentences for each draft...")
+                topic_sentences_request = GenerateTopicSentencesRequest(
+                    topics=topics,
+                    context={"context": context},
+                    headline=draft["headline"],
+                    hook=draft["hook"],
+                    thesis=draft["thesis"],
+                    article_type=draft["article_type"],
+                    draft_outlines=draft["draft_outlines"],
+                    optional_params=optional_params,
+                )
+                logger.debug(
+                    "Generate Topic Sentences Request: %s",
+                    topic_sentences_request.dict(),
+                )
+                response = requests.post(
+                    f"{API_BASE_URL}/generate-topic-sentences",
+                    json=topic_sentences_request.dict(),
+                    timeout=TIMEOUT,
+                )
+                response.raise_for_status()
+                topic_sentences_response = response.json()
+                logger.debug("Generated Topic Sentences: %s", topic_sentences_response)
+
+                # Step 13: Generate full content for each draft
+                logger.debug("Generating full content for each draft...")
+                full_content_request = GenerateFullContentRequest(
+                    topics=topics,
+                    context={"context": context},
+                    headline=draft["headline"],
+                    hook=draft["hook"],
+                    thesis=draft["thesis"],
+                    article_type=draft["article_type"],
+                    draft_outlines=topic_sentences_response["draft_outlines"],
+                    optional_params=optional_params,
+                )
+                logger.debug(
+                    "Generate Full Content Request: %s", full_content_request.dict()
+                )
+                response = requests.post(
+                    f"{API_BASE_URL}/generate-full-content",
+                    json=full_content_request.dict(),
+                    timeout=TIMEOUT,
+                )
+                response.raise_for_status()
+                full_content_response = response.json()
+                logger.debug("Generated Full Content: %s", full_content_response)
+
+                # Step 14: Edit content for each draft
+                logger.debug("Editing content for each draft...")
+                edit_content_request = EditContentRequest(
+                    topics=topics,
+                    context={"context": context},
+                    headline=draft["headline"],
+                    hook=draft["hook"],
+                    thesis=draft["thesis"],
+                    article_type=draft["article_type"],
+                    full_content_response=full_content_response,
+                    edit_type="flair",  # or "structure" based on your requirement
+                    optional_params=optional_params,
+                )
+                logger.debug("Edit Content Request: %s", edit_content_request.dict())
+
+                response = requests.post(
+                    f"{API_BASE_URL}/edit-content",
+                    json=edit_content_request.dict(),
+                    timeout=TIMEOUT,
+                )
+                response.raise_for_status()
+                edit_content_response = response.json()
+                logger.info("Edited Content: %s", edit_content_response)
 
 
 if __name__ == "__main__":

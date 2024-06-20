@@ -47,7 +47,7 @@ def handle_exception(exc: Exception):
         logger.error(f"Custom exception occurred: {exc}")
         return JSONResponse(status_code=400, content={"error": str(exc)})
     else:
-        logger.error(f"Unhandled exception: {exc}")
+        logger.error(f"Unhandled exception: {exc}", exc_info=True)
         return JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 

@@ -89,7 +89,9 @@ def get_textfx_examples():
 
 
 def format_textfx_instructions(textfx_examples):
-    instructions = []
+    instructions = [
+        "Use these textfx suggestions below as inspiration to edit for flair where relevant:\n"
+    ]
     for example in textfx_examples:
         method = example["method"]
         preamble = example["preamble"]
@@ -169,13 +171,19 @@ def get_prompts(function_name, request, **kwargs):
     params = prepare_params(params)
 
     # Conditionally include textfx examples for edit_flair
-    if params.get("edit_type") == "edit_flair":
+    if params.get("edit_type") == "flair":
         textfx_examples = get_textfx_examples()
+        logger.info(f"TextFX Examples: {textfx_examples}")
         textfx_instructions = format_textfx_instructions(textfx_examples)
         params["textfx_instructions"] = textfx_instructions
         logger.debug(f"TextFX Instructions: {textfx_instructions}")
     else:
         params["textfx_instructions"] = ""
+
+    # Ensure draft_outlines and other optional fields are included in params
+    params["draft_outlines"] = params.get("draft_outlines", "None")
+    params["full_content_response"] = params.get("full_content_response", "None")
+    params["edit_type"] = params.get("edit_type", "None")
 
     with error_handling_context():
         message_prompt = prompts[function_name]["message_prompt"].format(**params)

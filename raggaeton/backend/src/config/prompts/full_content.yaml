@@ -9,6 +9,8 @@ generate_full_content:
     - Hook: {hook}
     - Thesis: {thesis}
     - Article Types: {article_type}
+    - Topics: {topics}
+    - Context: {context}
     - Data: {optional_params[data]}
     - Publication: {optional_params[publication]}
     - Country: {optional_params[country]}

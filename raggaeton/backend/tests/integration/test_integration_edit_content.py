@@ -62,7 +62,7 @@ def base_request():
 @pytest.mark.parametrize("edit_type", ["edit_draft", "edit_flair"])
 def test_edit_content(base_request, edit_type):
     base_request["edit_type"] = edit_type
-    response = client.post("/api/edit_content", json={"request": base_request})
+    response = client.post("/api/edit-content", json={"request": base_request})
     assert response.status_code == 200, f"Response content: {response.content}"
     data = response.json()
     print(f"Response for {edit_type}: {data}")

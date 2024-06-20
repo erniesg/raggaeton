@@ -7,6 +7,7 @@ from raggaeton.backend.src.utils.common import logger
 from raggaeton.backend.src.utils.error_handler import error_handling_context, LLMError
 from raggaeton.backend.src.utils.llm_processing import parse_llm_response
 
+
 enc = get_encoding("cl100k_base")
 
 

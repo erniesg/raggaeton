@@ -2,18 +2,24 @@ edit_content:
   system_prompt: |
     You are an expert editor skilled in refining and polishing content for online publications. Your task is to ensure the content is polished, engaging, and suitable for the web. Always respond with a structured, valid JSON, adhering strictly to the provided example format. Do not include any other text or explanations outside of the JSON structure.
   message_prompt: |
-    Task: Review and polish the provided content to ensure it is engaging, coherent, and suitable for the web. Make sure the language is clear and concise, and the content flows logically. {textfx_instructions}
+    Task: Review and polish the provided content to ensure it is engaging, coherent, and suitable for the web. Make sure the language is clear and concise, and the content flows logically.
+
+    {textfx_instructions}
 
     Context:
     - Headline: {headline}
     - Hook: {hook}
     - Thesis: {thesis}
     - Article Type: {article_type}
+    - Topics: {topics}
+    - Context: {context}
     - Personas: {optional_params[personas]}
     - Scratchpad: {optional_params[scratchpad]}
     - Desired Length: {optional_params[desired_length]} words
     - Draft Outlines:
       {draft_outlines}
+    - Full Content:
+      {full_content_response}
     - Edit Type:
       {edit_type}
 
@@ -22,7 +28,7 @@ edit_content:
     - For "edit_flair": Focus on the language and style. Use UK English. Ensure that the content is engaging, clear, and concise. Use linguistic devices such as metaphors, similes, and vivid descriptions to enhance the content.
     - Only edit existing content. Do not generate new topic sentences or paragraphs.
 
-    Please provide the response in the following structured JSON format, adhering to the Pydantic model `EditContentResponse`:
+    The total word count for all paragraphs should be about {optional_params[desired_length]} words. Please provide the response in the following structured JSON format, adhering to the Pydantic model `EditContentResponse`:
 
     {{
       "edited_content": [
