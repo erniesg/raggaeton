@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from raggaeton.backend.src.schemas.content import (
     GenerateDraftRequest,
     GenerateDraftResponse,
@@ -17,8 +17,15 @@ async def generate_draft(request: GenerateDraftRequest):
     # Initialize the LLM handler
     llm_handler = LLMHandler()
 
+    # Determine the function name based on article_type
+    function_name = f"generate_draft_{request.article_type}"
+
     # Call the LLM to get the response and token count
-    response, token_count = llm_handler.call_llm("generate_draft_benefits", request)
+    try:
+        response, token_count = llm_handler.call_llm(function_name, request)
+    except Exception as e:
+        logger.error(f"Error calling LLM handler: {e}")
+        raise HTTPException(status_code=500, detail="Error generating draft")
 
     # Log the LLM response
     logger.info(f"LLM Response: {response}")

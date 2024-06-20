@@ -135,17 +135,15 @@ def get_optional_params(params, **kwargs):
 def prepare_params(params):
     # Ensure nested keys like 'content_block', 'details', 'topic_sentences', and 'paragraphs' are included in params
     if "draft_outlines" in params:
-        draft_outlines_str = ""
         for block in params["draft_outlines"]:
-            if "content_block" in block:
-                draft_outlines_str += f"- Content Block: {block['content_block']}\n"
-            if "details" in block:
-                draft_outlines_str += f"  Details: {block['details']}\n"
-            if "topic_sentences" in block:
-                draft_outlines_str += f"  Topic Sentences: {block['topic_sentences']}\n"
-            if "paragraphs" in block:
-                draft_outlines_str += f"  Paragraphs: {block['paragraphs']}\n"
-        params["draft_outlines"] = draft_outlines_str
+            if "details" in block and isinstance(block["details"], list):
+                block["details"] = " ".join(map(str, block["details"]))
+            if "topic_sentences" in block and isinstance(
+                block["topic_sentences"], list
+            ):
+                block["topic_sentences"] = " ".join(map(str, block["topic_sentences"]))
+            if "paragraphs" in block and isinstance(block["paragraphs"], list):
+                block["paragraphs"] = " ".join(map(str, block["paragraphs"]))
     return params
 
 

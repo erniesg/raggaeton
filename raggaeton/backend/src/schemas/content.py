@@ -22,6 +22,8 @@ class GenerateHeadlinesResponse(BaseModel):
 
 
 class GenerateDraftRequest(BaseModel):
+    topics: List[str]
+    context: Optional[Dict[str, Any]] = None
     headline: str
     hook: str
     thesis: str

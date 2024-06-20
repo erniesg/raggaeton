@@ -2,7 +2,6 @@ import os
 from raggaeton.backend.src.utils.common import logger, base_dir, config_loader
 from llama_index.packs.ragatouille_retriever.base import RAGatouilleRetrieverPack
 from llama_index.llms.openai import OpenAI
-from raggaeton.backend.src.api.endpoints.tools import load_rag_query_tool
 from raggaeton.backend.src.utils.error_handler import DataError
 
 config = config_loader.get_config()
@@ -11,10 +10,16 @@ INDEX_PATH = os.path.join(
 )
 
 
-def create_ragatouille_index(docs, index_name):
-    if os.path.exists(INDEX_PATH):
+def create_ragatouille_index(docs, index_name, index_path=None):
+    if index_path and os.path.exists(index_path):
         try:
-            ragatouille_pack = load_rag_query_tool(index_path=INDEX_PATH, docs=docs)
+            ragatouille_pack = RAGatouilleRetrieverPack(
+                documents=docs,
+                llm=OpenAI(model="gpt-4o"),
+                index_name=index_name,
+                index_path=index_path,
+                top_k=10,
+            )
         except DataError as e:
             logger.error(f"Failed to load existing index: {e}")
             raise
@@ -34,5 +39,6 @@ def retrieve_nodes(ragatouille_pack, query):
     return nodes
 
 
-def construct_query(topic, keywords):
-    return f"Research on {topic} with keywords: {', '.join(keywords)}"
+def construct_query(topics):
+    topics_str = ", ".join(topics)
+    return f"Research on {topics_str}"

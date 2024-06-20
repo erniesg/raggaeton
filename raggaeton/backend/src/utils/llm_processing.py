@@ -92,19 +92,7 @@ def parse_llm_response(
                                 "hook": request_data.get("hook"),
                                 "thesis": request_data.get("thesis"),
                                 "article_type": request_data.get("article_type"),
-                                "structure": [
-                                    {
-                                        "content_block": block["content_block"],
-                                        "details": block["details"]
-                                        if isinstance(block["details"], str)
-                                        else " ".join(
-                                            str(item) for item in block["details"]
-                                        )
-                                        if isinstance(block["details"], list)
-                                        else json.dumps(block["details"]),
-                                    }
-                                    for block in json_data.get("structure", [])
-                                ],
+                                "draft_outlines": json_data.get("draft_outlines", []),
                                 "optional_params": request_data.get(
                                     "optional_params", {}
                                 ),
@@ -114,7 +102,7 @@ def parse_llm_response(
 
                 # Ensure 'details' is a string
                 for draft in json_data.get("drafts", []):
-                    for block in draft.get("structure", []):
+                    for block in draft.get("draft_outlines", []):
                         logger.debug(
                             f"Original details for block {block['content_block']}: {block['details']}"
                         )

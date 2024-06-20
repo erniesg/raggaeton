@@ -1,4 +1,5 @@
 import requests
+import os
 from raggaeton.backend.src.schemas.research import (
     GenerateResearchQuestionsRequest,
     DoResearchRequest,
@@ -17,6 +18,7 @@ from llama_index.core import Document, Settings
 from raggaeton.backend.src.utils.common import (
     config_loader,
     error_handling_context,
+    find_project_root,
 )
 from raggaeton.backend.src.utils.utils import truncate_log_message
 import logging
@@ -33,13 +35,13 @@ def set_document_settings():
     overlap = config["document"]["overlap"][0]  # Use the first setting
     Settings.chunk_size = chunk_size
     Settings.chunk_overlap = overlap
-    logger.info(f"Document settings set: chunk_size={chunk_size}, overlap={overlap}")
+    logger.debug(f"Document settings set: chunk_size={chunk_size}, overlap={overlap}")
 
 
 def main():
     with error_handling_context():
         # Define common parameters
-        topics = ["Hiking", "Climbing Fu Gai Mountain in Zhejiang"]
+        topics = ["Hiking", "Climbing Fu Gai Mountain in Zhejiang", "floating cap"]
         article_types = ["travel"]
         optional_params = {
             "desired_length": 600,
@@ -76,7 +78,7 @@ def main():
         )
         response.raise_for_status()
         research_results_response = response.json()
-        logger.info("Research Results: %s", research_results_response)
+        logger.debug("Research Results: %s", research_results_response)
 
         # Step 3: Extract you.com and Obsidian snippets
         logger.info("Extracting snippets...")
@@ -112,7 +114,7 @@ def main():
         # Step 5: Retrieve data from Supabase
         logger.info("Retrieving data from Supabase...")
         saved_research_results = fetch_data("research_results")
-        logger.info("Saved Research Results: %s", saved_research_results)
+        logger.debug("Saved Research Results: %s", saved_research_results)
 
         # Step 6: Set document settings from config
         logger.info("Setting document settings...")
@@ -125,17 +127,25 @@ def main():
             for item in saved_research_results
         ]
 
-        # Step 8: Create or load RAGatouille index using index_name from config
-        logger.info("Creating or loading RAGatouille index...")
+        # Step 8: Check if the index path exists
+        base_dir = find_project_root(os.path.dirname(__file__))
         index_name = config_loader.config["index_name"]
-        ragatouille_pack = create_ragatouille_index(documents, index_name)
-
-        # Step 9: Construct the query using the topic and keywords
-        logger.info("Constructing query...")
-        query = construct_query(
-            "Climbing Fu Gai Mountain in Zhejiang",
-            ["Climbing", "Fu Gai Mountain", "Zhejiang"],
+        index_path = os.path.join(
+            base_dir, ".ragatouille", "colbert", "indexes", index_name
         )
+
+        if os.path.exists(index_path):
+            logger.info(f"Index path exists: {index_path}")
+            ragatouille_pack = create_ragatouille_index(
+                documents, index_name, index_path=index_path
+            )
+        else:
+            logger.info("Index path does not exist. Creating new index...")
+            ragatouille_pack = create_ragatouille_index(documents, index_name)
+
+        # Step 9: Construct the query using the topics
+        logger.info("Constructing query...")
+        query = construct_query(topics)
         nodes = retrieve_nodes(ragatouille_pack, query)
         logger.info("Nodes returned: %s", truncate_log_message(str(nodes), length=500))
         context = "\n".join([node.text for node in nodes])
@@ -160,15 +170,17 @@ def main():
 
         # Step 11: Generate drafts for each headline
         logger.info("Generating drafts for each headline...")
-        for headline in headlines_response["headlines"]:
+        for headline_data in headlines_response["headlines"]:
             draft_request = GenerateDraftRequest(
-                headline=headline["headline"],
-                article_type=headline["article_type"],
-                hook=headline["hook"],
-                thesis=headline["thesis"],
+                topics=topics,
+                context={"context": context},
+                headline=headline_data["headline"],
+                hook=headline_data["hook"],
+                thesis=headline_data["thesis"],
+                article_type=headline_data["article_type"],
                 optional_params=optional_params,
             )
-            logger.info("Generate Draft Request: %s", draft_request.dict())
+            logger.debug("Generate Draft Request: %s", draft_request.dict())
             response = requests.post(
                 f"{API_BASE_URL}/generate-draft",
                 json=draft_request.dict(),
@@ -177,6 +189,14 @@ def main():
             response.raise_for_status()
             draft_response = response.json()
             logger.info("Generated Draft: %s", draft_response)
+            logger.debug("Draft Response Type: %s", type(draft_response))
+
+            # Log the raw response
+            logger.debug("Raw Draft Response: %s", response.text)
+
+            # Log the draft outlines specifically
+            for draft in draft_response.get("drafts", []):
+                logger.debug("Draft Outlines: %s", draft.get("draft_outlines", []))
 
 
 if __name__ == "__main__":

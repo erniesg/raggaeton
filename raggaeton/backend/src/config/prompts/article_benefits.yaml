@@ -21,7 +21,7 @@ generate_draft_benefits:
     Please provide the response in the following structured JSON format:
 
     {{
-      "structure": [
+      "draft_outlines": [
         {{
           "content_block": "Introduction",
           "details": "[Content Block Details]"

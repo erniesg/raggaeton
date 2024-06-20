@@ -9,6 +9,8 @@ generate_draft_travel:
     - Hook: {hook}
     - Thesis: {thesis}
     - Article Types: {article_type}
+    - Topics: {topics}
+    - Context: {context}
     - Data: {optional_params[data]}
     - Publication: {optional_params[publication]}
     - Country: {optional_params[country]}
@@ -21,7 +23,7 @@ generate_draft_travel:
     Please provide the response in the following structured JSON format:
 
     {{
-      "structure": [
+      "draft_outlines": [
         {{
           "content_block": "Introduction",
           "details": "[Content Block Details]"
@@ -44,6 +46,9 @@ generate_draft_travel:
         }}
       ]
     }}
+
+    Ensure that the 'details' field is always a string. If there are multiple items, concatenate them with double newlines (\n\n).
+
   structures:
     - ["Introduction", "Personal Circumstances", "Destination Overview", "Main Attractions", "Conclusion"]
     - ["Introduction", "Setting the Scene", "Historical Background", "Personality and Encounters", "Conclusion"]
