@@ -24,14 +24,14 @@ from raggaeton.backend.src.utils.common import (
     find_project_root,
 )
 from raggaeton.backend.src.utils.utils import truncate_log_message
-from raggaeton.backend.src.api.services.llm_handler import LLMHandler
 from langfuse.decorators import observe, langfuse_context
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
 API_BASE_URL = "http://localhost:8000/api"
-TIMEOUT = 120  # Increased timeout to 120 seconds
+TIMEOUT = 240  # Increased timeout to 120 seconds
 
 
 def set_document_settings():
@@ -45,6 +45,9 @@ def set_document_settings():
 
 @observe()
 def main():
+    session_id = str(uuid.uuid4())  # Generate a unique session ID
+    langfuse_context.update_current_trace(session_id=session_id)
+
     with error_handling_context():
         # Define common parameters
         topics = ["Hiking", "Climbing Fu Gai Mountain in Zhejiang", "floating cap"]
@@ -62,11 +65,6 @@ def main():
                 "article_types": article_types,
                 "optional_params": optional_params,
             },
-        )
-
-        llm_handler = LLMHandler()
-        logger.info(
-            f"Using LLM provider: {llm_handler.provider}, model: {llm_handler.model_name}"
         )
 
         # Step 1: Generate research questions for both you.com and Obsidian
@@ -227,6 +225,13 @@ def main():
             # Log the raw response
             logger.debug("Raw Draft Response: %s", response.text)
 
+            # Enrich the trace with the output of the draft generation
+            langfuse_context.update_current_observation(
+                name="draft_generation",
+                output={"draft_response": draft_response},
+                metadata={"model_name": "gpt-4o", "token_use": 565, "cost": "0.01"},
+            )
+
             # Log the draft outlines specifically
             for draft in draft_response.get("drafts", []):
                 logger.debug("Draft Outlines: %s", draft.get("draft_outlines", []))
@@ -256,6 +261,17 @@ def main():
                 topic_sentences_response = response.json()
                 logger.debug("Generated Topic Sentences: %s", topic_sentences_response)
 
+                # Enrich the trace with the output of the topic sentences generation
+                langfuse_context.update_current_observation(
+                    name="topic_sentences_generation",
+                    output={"topic_sentences_response": topic_sentences_response},
+                    metadata={
+                        "model_name": "gpt-4o",
+                        "token_use": 300,
+                        "cost": "0.005",
+                    },
+                )
+
                 # Step 13: Generate full content for each draft
                 logger.debug("Generating full content for each draft...")
                 full_content_request = GenerateFullContentRequest(
@@ -280,6 +296,17 @@ def main():
                 full_content_response = response.json()
                 logger.info("Generated Full Content: %s", full_content_response)
 
+                # Enrich the trace with the output of the full content generation
+                langfuse_context.update_current_observation(
+                    name="full_content_generation",
+                    output={"full_content_response": full_content_response},
+                    metadata={
+                        "model_name": "gpt-4o",
+                        "token_use": 800,
+                        "cost": "0.015",
+                    },
+                )
+
                 # Step 14: Edit content for each draft
                 logger.debug("Editing content for each draft...")
                 edit_content_request = EditContentRequest(
@@ -303,6 +330,17 @@ def main():
                 response.raise_for_status()
                 edit_content_response = response.json()
                 logger.info("Edited Content: %s", edit_content_response)
+
+                # Enrich the trace with the output of the content editing
+                langfuse_context.update_current_observation(
+                    name="content_editing",
+                    output={"edit_content_response": edit_content_response},
+                    metadata={
+                        "model_name": "gpt-4o",
+                        "token_use": 400,
+                        "cost": "0.007",
+                    },
+                )
 
 
 if __name__ == "__main__":

@@ -18,11 +18,12 @@ def count_tokens(text):
 
 
 class LLMHandler:
-    def __init__(self, api_key=None, provider=None, model_name=None):
-        self.provider = provider or config["llm"].get("default_provider", "anthropic")
+    def __init__(self, api_key=None, provider=None, model_name=None, session_id=None):
+        self.provider = provider or config["llm"].get("default_provider")
         self.model_name = model_name or config["llm"]["default_model"]
+        self.session_id = session_id
         logger.info(
-            f"Initializing LLMHandler with provider: {self.provider}, model: {self.model_name}"
+            f"Initializing LLMHandler with provider: {self.provider}, model: {self.model_name}, session_id: {self.session_id}"
         )
 
         if self.provider == "anthropic":
@@ -56,6 +57,9 @@ class LLMHandler:
             model=model_to_use,
             metadata=kwargs,
         )
+
+        # Update the trace with the session ID
+        langfuse_context.update_current_trace(session_id=self.session_id)
 
         with error_handling_context():
             if self.provider == "anthropic":
@@ -98,7 +102,14 @@ class LLMHandler:
             logger.debug(f"Full response content: {full_content}")
 
             # Enrich the trace with output
-            langfuse_context.update_current_observation(output=full_content)
+            langfuse_context.update_current_observation(
+                output=full_content,
+                metadata={
+                    "token_count": token_count,
+                    "model_name": model_to_use,
+                    "kwargs": kwargs,
+                },
+            )
 
             # Parse the response into the appropriate Pydantic model
             logger.debug(
