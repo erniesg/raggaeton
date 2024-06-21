@@ -23,6 +23,7 @@ embedding:
   batch_size: 100
 
 llm:
+  default_provider: "openai"  # Add this line if not present
   default_model: "gpt-4o"
   models:
     - model_name: "gpt-4o"
@@ -35,7 +36,7 @@ llm:
         generate_qa:
           system_message: ""
           message: "Your custom message here"
-    - model_name: "claude-3-opus-20240229"
+    - model_name: "claude-3-5-sonnet-20240620"
       params:
         max_tokens: 1000
         temperature: 0.1

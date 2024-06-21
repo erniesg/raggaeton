@@ -28,7 +28,7 @@ async def generate_research_questions(request: GenerateResearchQuestionsRequest)
     logger.info(
         f"Received generate-research-questions request: {request.model_dump_json()}"
     )
-    llm_handler = LLMHandler(provider="openai")
+    llm_handler = LLMHandler()
     with error_handling_context():
         system_prompt, message_prompt = get_prompts(
             "generate_research_questions", request

@@ -24,6 +24,7 @@ from raggaeton.backend.src.utils.common import (
     find_project_root,
 )
 from raggaeton.backend.src.utils.utils import truncate_log_message
+from raggaeton.backend.src.api.services.llm_handler import LLMHandler
 from langfuse.decorators import observe, langfuse_context
 import logging
 
@@ -61,6 +62,11 @@ def main():
                 "article_types": article_types,
                 "optional_params": optional_params,
             },
+        )
+
+        llm_handler = LLMHandler()
+        logger.info(
+            f"Using LLM provider: {llm_handler.provider}, model: {llm_handler.model_name}"
         )
 
         # Step 1: Generate research questions for both you.com and Obsidian

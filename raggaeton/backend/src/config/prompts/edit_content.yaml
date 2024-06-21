@@ -23,7 +23,7 @@ edit_content:
 
     Instructions:
     - For "edit_draft": Focus on the structure and coherence of the draft. Ensure that the content is well-organized, logical, and flows smoothly. You can reorder, delete, or add new content blocks. Make necessary adjustments to the structure and content blocks.
-    - For "edit_flair": Focus on the language and style. Begin your sentence with different word types, e.g., noun, adjective, adverb, etc. Use sentences of varying length, UK English, and TextFX to rewrite. After every rewrite, indicate the TextFX effect used like so in square brackets, i.e. [TextFX: Type applied].
+    - For "edit_flair": Focus on the language and style. Begin your sentence with different word types, e.g., noun, adjective, adverb, etc. Use sentences of varying length, UK English, and TextFX to rewrite. After every rewrite, indicate the TextFX effect used like so in square brackets, i.e. [TextFX: Type].
     - {textfx_instructions}
     - For both edit types, rewrite directly, make significant and meaningful changes to improve clarity, engagement, and coherence. Do not just make minor adjustments; ensure substantial rewriting where needed.
 

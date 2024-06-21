@@ -17,7 +17,7 @@ async def generate_headlines(request: GenerateHeadlinesRequest):
 
     system_prompt, message_prompt = get_prompts("generate_headlines", request)
 
-    llm_handler = LLMHandler(provider="openai")
+    llm_handler = LLMHandler()
     with error_handling_context():
         response_text, token_count = llm_handler.call_llm(
             "generate_headlines",

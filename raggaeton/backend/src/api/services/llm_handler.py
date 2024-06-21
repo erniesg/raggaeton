@@ -18,13 +18,18 @@ def count_tokens(text):
 
 
 class LLMHandler:
-    def __init__(self, api_key=None, provider="openai"):
-        self.provider = provider
-        if provider == "anthropic":
+    def __init__(self, api_key=None, provider=None, model_name=None):
+        self.provider = provider or config["llm"].get("default_provider", "anthropic")
+        self.model_name = model_name or config["llm"]["default_model"]
+        logger.info(
+            f"Initializing LLMHandler with provider: {self.provider}, model: {self.model_name}"
+        )
+
+        if self.provider == "anthropic":
             self.client = anthropic.Anthropic(
-                api_key=api_key or os.getenv("ANTHROPIC_API_KEY")
+                api_key=api_key or os.getenv("CLAUDE_API_KEY")
             )
-        elif provider == "openai":
+        elif self.provider == "openai":
             self.client = openai.OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
         else:
             raise ValueError("Unsupported provider")
@@ -41,7 +46,8 @@ class LLMHandler:
         logger.info(f"Message Prompt: {message_prompt}")
 
         # Use the default model from the config if model_name is not provided
-        model_to_use = model_name if model_name else config["llm"]["default_model"]
+        model_to_use = model_name if model_name else self.model_name
+        logger.info(f"Using model: {model_to_use}")
 
         # Enrich the trace with input, model, and metadata
         langfuse_context.update_current_observation(
@@ -55,7 +61,7 @@ class LLMHandler:
             if self.provider == "anthropic":
                 with self.client.messages.stream(
                     model=model_to_use,
-                    max_tokens=1000,
+                    max_tokens=4096,
                     messages=[{"role": "user", "content": message_prompt}],
                     system=system_prompt if system_prompt else None,
                 ) as stream:
