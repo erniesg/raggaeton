@@ -4,8 +4,6 @@ edit_content:
   message_prompt: |
     Task: Review and polish the provided content to ensure it is engaging, coherent, and suitable for the web. Make sure the language is clear and concise, and the content flows logically.
 
-    {textfx_instructions}
-
     Context:
     - Headline: {headline}
     - Hook: {hook}
@@ -24,9 +22,10 @@ edit_content:
       {edit_type}
 
     Instructions:
-    - For "edit_draft": Focus on the structure and coherence of the draft. Ensure that the content is well-organized, logical, and flows smoothly. You can reorder, delete or add new content blocks. Make necessary adjustments to the structure and content blocks.
-    - For "edit_flair": Focus on the language and style. Use UK English. Ensure that the content is engaging, clear, and concise. Use linguistic devices such as metaphors, similes, and vivid descriptions to enhance the content.
-    - Only edit existing content. Do not generate new topic sentences or paragraphs.
+    - For "edit_draft": Focus on the structure and coherence of the draft. Ensure that the content is well-organized, logical, and flows smoothly. You can reorder, delete, or add new content blocks. Make necessary adjustments to the structure and content blocks.
+    - For "edit_flair": Focus on the language and style. Begin your sentence with different word types, e.g., noun, adjective, adverb, etc. Use sentences of varying length, UK English, and TextFX to rewrite. After every rewrite, indicate the TextFX effect used like so in square brackets, i.e. [TextFX: Type applied].
+    - {textfx_instructions}
+    - For both edit types, rewrite directly, make significant and meaningful changes to improve clarity, engagement, and coherence. Do not just make minor adjustments; ensure substantial rewriting where needed.
 
     The total word count for all paragraphs should be about {optional_params[desired_length]} words. Please provide the response in the following structured JSON format, adhering to the Pydantic model `EditContentResponse`:
 

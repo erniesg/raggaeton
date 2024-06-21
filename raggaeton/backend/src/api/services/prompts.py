@@ -90,7 +90,7 @@ def get_textfx_examples():
 
 def format_textfx_instructions(textfx_examples):
     instructions = [
-        "Use these textfx suggestions below as inspiration to edit for flair where relevant:\n"
+        "Learn and apply these TextFX examples to rewrite the article where relevant to enhance engagement, conciseness and variety.\n\n"
     ]
     for example in textfx_examples:
         method = example["method"]

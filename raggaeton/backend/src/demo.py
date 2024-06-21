@@ -110,7 +110,7 @@ def main():
         )
 
         # Step 4: Save you.com and Obsidian data to Supabase
-        logger.info("Saving data to Supabase...")
+        logger.debug("Saving data to Supabase...")
         upsert_data("research_results", you_com_data)
         upsert_data("research_results", obsidian_data)
 
@@ -150,7 +150,7 @@ def main():
         logger.debug("Constructing query...")
         query = construct_query(topics)
         nodes = retrieve_nodes(ragatouille_pack, query)
-        logger.info("Nodes returned: %s", truncate_log_message(str(nodes), length=500))
+        logger.debug("Nodes returned: %s", truncate_log_message(str(nodes), length=500))
         context = "\n".join([node.text for node in nodes])
 
         # Step 10: Generate headlines
@@ -161,7 +161,7 @@ def main():
             context={"context": context},
             optional_params=optional_params,
         )
-        logger.info("Generate Headlines Request: %s", headlines_request.dict())
+        logger.debug("Generate Headlines Request: %s", headlines_request.dict())
         response = requests.post(
             f"{API_BASE_URL}/generate-headlines",
             json=headlines_request.dict(),
@@ -169,7 +169,7 @@ def main():
         )
         response.raise_for_status()
         headlines_response = response.json()
-        logger.info("Generated Headlines: %s", headlines_response)
+        logger.debug("Generated Headlines: %s", headlines_response)
 
         # Step 11: Generate drafts for each headline
         logger.debug("Generating drafts for each headline...")
@@ -248,7 +248,7 @@ def main():
                 )
                 response.raise_for_status()
                 full_content_response = response.json()
-                logger.debug("Generated Full Content: %s", full_content_response)
+                logger.info("Generated Full Content: %s", full_content_response)
 
                 # Step 14: Edit content for each draft
                 logger.debug("Editing content for each draft...")

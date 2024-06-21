@@ -3,9 +3,11 @@ from tiktoken import get_encoding
 from raggaeton.backend.src.api.services.prompts import get_prompts, config
 import anthropic
 import openai
-from raggaeton.backend.src.utils.common import logger
 from raggaeton.backend.src.utils.error_handler import error_handling_context, LLMError
 from raggaeton.backend.src.utils.llm_processing import parse_llm_response
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 enc = get_encoding("cl100k_base")
@@ -28,7 +30,7 @@ class LLMHandler:
             raise ValueError("Unsupported provider")
 
     def call_llm(self, function_name, request, model_name=None, **kwargs):
-        logger.info(f"LLM Handler - Received kwargs in call_llm: {kwargs}")
+        logger.debug(f"LLM Handler - Received kwargs in call_llm: {kwargs}")
         # Ensure edit_type is included in kwargs if present in request
         if hasattr(request, "edit_type"):
             kwargs["edit_type"] = request.edit_type
@@ -78,10 +80,10 @@ class LLMHandler:
                 f"\nResponse type: {type(full_content)}"
                 f"\nToken count: {token_count}"
             )
-            logger.info(f"Full response content: {full_content}")
+            logger.debug(f"Full response content: {full_content}")
 
             # Parse the response into the appropriate Pydantic model
-            logger.info(
+            logger.debug(
                 f"Calling parse_llm_response with function_name: {function_name}"
             )
 
@@ -91,7 +93,7 @@ class LLMHandler:
                     function_name,
                     request_data=request.model_dump() if request else {},
                 )
-                logger.info("Successfully called parse_llm_response")
+                logger.debug("Successfully called parse_llm_response")
             except Exception as e:
                 logger.error(f"Failed to parse LLM response: {e}")
                 raise LLMError(f"Failed to parse LLM response: {e}")
