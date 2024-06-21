@@ -23,8 +23,8 @@ embedding:
   batch_size: 100
 
 llm:
-  default_provider: "openai"  # Add this line if not present
-  default_model: "gpt-4o"
+  default_provider: "anthropic"  # Add this line if not present
+  default_model: "claude-3-5-sonnet-20240620"
   models:
     - model_name: "gpt-4o"
       params:
