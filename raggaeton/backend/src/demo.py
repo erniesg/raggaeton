@@ -24,6 +24,7 @@ from raggaeton.backend.src.utils.common import (
     find_project_root,
 )
 from raggaeton.backend.src.utils.utils import truncate_log_message
+from langfuse.decorators import observe, langfuse_context
 import logging
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ def set_document_settings():
     logger.debug(f"Document settings set: chunk_size={chunk_size}, overlap={overlap}")
 
 
+@observe()
 def main():
     with error_handling_context():
         # Define common parameters
@@ -50,6 +52,16 @@ def main():
             "desired_length": 600,
             "scratchpad": "I saw an ant try to move a flower on the hike, it was doing so with all its might.\nWhen not doing gradient descent, an A.I. engineer had lots of fun climbing a physical mountain. I took a challenging route and ended up climbing over rocks and caves.",
         }
+
+        # Enrich the trace with input parameters
+        langfuse_context.update_current_observation(
+            name="main_process",
+            input={
+                "topics": topics,
+                "article_types": article_types,
+                "optional_params": optional_params,
+            },
+        )
 
         # Step 1: Generate research questions for both you.com and Obsidian
         logger.debug("Generating research questions...")
@@ -68,6 +80,12 @@ def main():
         research_questions_response = response.json()
         logger.debug("Generated Research Questions: %s", research_questions_response)
 
+        # Enrich the trace with the output of research questions
+        langfuse_context.update_current_observation(
+            name="research_questions",
+            output={"research_questions_response": research_questions_response},
+        )
+
         # Step 2: Do research for both you.com and Obsidian
         logger.debug("Performing research...")
         do_research_request = DoResearchRequest(
@@ -82,6 +100,12 @@ def main():
         response.raise_for_status()
         research_results_response = response.json()
         logger.debug("Research Results: %s", research_results_response)
+
+        # Enrich the trace with the output of research results
+        langfuse_context.update_current_observation(
+            name="research_results",
+            output={"research_results_response": research_results_response},
+        )
 
         # Step 3: Extract you.com and Obsidian snippets
         logger.debug("Extracting snippets...")

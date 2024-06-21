@@ -5,10 +5,10 @@ import anthropic
 import openai
 from raggaeton.backend.src.utils.error_handler import error_handling_context, LLMError
 from raggaeton.backend.src.utils.llm_processing import parse_llm_response
+from langfuse.decorators import observe, langfuse_context
 import logging
 
 logger = logging.getLogger(__name__)
-
 
 enc = get_encoding("cl100k_base")
 
@@ -29,6 +29,7 @@ class LLMHandler:
         else:
             raise ValueError("Unsupported provider")
 
+    @observe(as_type="generation")
     def call_llm(self, function_name, request, model_name=None, **kwargs):
         logger.debug(f"LLM Handler - Received kwargs in call_llm: {kwargs}")
         # Ensure edit_type is included in kwargs if present in request
@@ -41,6 +42,14 @@ class LLMHandler:
 
         # Use the default model from the config if model_name is not provided
         model_to_use = model_name if model_name else config["llm"]["default_model"]
+
+        # Enrich the trace with input, model, and metadata
+        langfuse_context.update_current_observation(
+            name=f"llm_handler_{function_name}",
+            input={"system_prompt": system_prompt, "message_prompt": message_prompt},
+            model=model_to_use,
+            metadata=kwargs,
+        )
 
         with error_handling_context():
             if self.provider == "anthropic":
@@ -81,6 +90,9 @@ class LLMHandler:
                 f"\nToken count: {token_count}"
             )
             logger.debug(f"Full response content: {full_content}")
+
+            # Enrich the trace with output
+            langfuse_context.update_current_observation(output=full_content)
 
             # Parse the response into the appropriate Pydantic model
             logger.debug(

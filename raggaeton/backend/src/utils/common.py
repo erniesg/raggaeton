@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from google.cloud import secretmanager
 import logging.config
 from raggaeton.backend.src.utils.error_handler import error_handling_context
+from langfuse import Langfuse
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,16 @@ class ConfigLoader:
             cls._instance = super(ConfigLoader, cls).__new__(cls)
             cls._instance.secrets = {}
             cls._instance._load_config()
+            cls._instance._setup_langfuse()
         return cls._instance
+
+    def _setup_langfuse(self):
+        self.langfuse = Langfuse(
+            secret_key=self.secrets.get("LANGFUSE_SECRET_KEY"),
+            public_key=self.secrets.get("LANGFUSE_PUBLIC_KEY"),
+            host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
+        )
+        logger.info("Langfuse client initialized")
 
     def _load_config(self):
         logger.debug("Starting _load_config")
@@ -127,6 +137,8 @@ class ConfigLoader:
                     "SERP_API_KEY": os.getenv("SERP_API_KEY"),
                     "MODAL_API_KEY": os.getenv("MODAL_API_KEY"),
                     "JINA_READER_API": os.getenv("JINA_READER_API"),
+                    "LANGFUSE_SECRET_KEY": os.getenv("LANGFUSE_SECRET_KEY"),
+                    "LANGFUSE_PUBLIC_KEY": os.getenv("LANGFUSE_PUBLIC_KEY"),
                     # Add other secrets here
                 }
                 logger.info("Loaded secrets from .env file.")
@@ -149,6 +161,8 @@ class ConfigLoader:
                 "SERP_API_KEY",
                 "MODAL_API_KEY",
                 "JINA_READER_API",
+                "LANGFUSE_SECRET_KEY",
+                "LANGFUSE_PUBLIC_KEY",
             ]
             self.secrets = {}
             for secret_name in secret_names:
