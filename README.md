@@ -4,15 +4,6 @@ RAGgaeton gives you a ReAct agent with ColBERTv2 retriever and Google search too
 
 On the roadmap: supercharge this with grid search over RAG params from document length to LLM model used. 🥳 🦾 🚀
 
-# Demo
-Click the GIF below to watch the demo video of AskTIA in action:
-
-[![Demo Video](https://github.com/erniesg/raggaeton/blob/master/raggaeton/public/tiamd.gif?raw=true)](https://drive.google.com/file/d/1pGYvjtujsI304YWpbWLsDii_3XQhxTIy/view?usp=sharing)
-
-The TIA Bot above is playing in regular speed... After I have preloaded the index and agent. Actual behaviour will be slower - keep your eyes on the console to see what's going on!
-
-It's thinking out loud because the custom prompt made it so, the default system prompt will not exhibit this behaviour. Probably fixable.
-
 # How to Run Locally
 - Clone the repository
 - `cd` to the repository
@@ -39,21 +30,6 @@ GOOGLE_SEARCH_ENGINE_ID=...
 uvicorn raggaeton.backend.src.api.endpoints.chat:app --host 0.0.0.0 --port 8000 --log-level debug
 ```
 - Wait for the application to finish initialising. You should see the message: `Lifespan: Components initialized successfully` in console
-
-### Interacting with the API
-- Visit the [raggaeton-frontend](https://github.com/erniesg/raggaeton-frontend) repository and follow the instructions there to interact with the API via the front-end
-
-### Sample `curl` Request
-- You can test the API with a sample `curl` request:
-```bash
-curl -X POST "http://127.0.0.1:8000/chat" -H "Content-Type: application/json" -d "{\"query\": \"What are the top startups in Indonesia?\"}"
-```
-
-### NOTE
-- I only managed to ingest 900 posts despite multiple attempts so the knowledgebase is incomplete. Pages don't appear from 31 on. That seemed to be the limit?
-- The default agent used is OpenAIAgent with custom prompts `raggaeton/raggaeton/backend/src/config/prompts.md` so the text response is rather funky. If it looks like it hasn't finished its train of thought, just say something to continue.
-- The first time you load this, it will take a while to start, index and fetch data for the first time so you might want to view the console to view progress.
-- You can rename `prompts.md` to `_prompts.md` then restart FastAPI to see default OpenAI agent behaviour (it still thinks it's 2013...).
 
 # Implementation
 ![Architecture diagram](https://github.com/erniesg/raggaeton/blob/master/raggaeton/public/archi.png?raw=true)
@@ -190,18 +166,12 @@ Speaking of datasets, I did not incorporate other data per se since LLMs are alr
 
 Parts of an experimentation engine is already set up, so this area is definitely ripe for an actual field test to find the best settings for our own purposes coupled with evaluations to "unit test" our agent!
 
-### Reverse Engineer from Human Evaluation
-There were a few times on this project that I got too carried away on exploring my own pedantic curiosity that I didn't end up using which were time taken away for checking off the dimensions of creativity, quality of prompts, reliability and good documentation fully. In retrospect, I should have better clarified the weightage and expectations to better ensure that what I deliver will meet expectations.
+### Reverse Engineer from Project Requirements
+There were a few times on this project that I got too carried away on exploring my own pedantic curiosity that I didn't end up using which were time taken away for a more robust RAG pipeline.
 
-Grid search, a more delightful UX and web deployment were areas that took up a lot of my effort aside from the core work of an effective RAG engine and they don't map to the full set of dimensions that I'll be graded upon well. :( But I had lots of fun which is a reward in its own right.
+Grid search, a more delightful UX and web deployment were areas that took up a lot of my effort aside from the core RAG work but I had lots of fun which is a reward in its own right.
 
 My stance on prompting vs. programming is like my lean towards hyperparameter tuning with grid search: let the LLM do it. It is necessary but it is something that I like to ask the LLM to do for me in particular. Good prompts are obviously necessary but natural language is highly imprecise and any system that relies on prompting effectiveness to be good feels especially brittle to me. The main motivation in letting LLMs handle this is to structure and constrain such non-deterministic programmes to be as backward-compatible with software and be more like programming, rather than whispering black magic, as much as possible. It is for this reason that for future extensions of RAGgaeton, I'd like to explore [DSPy](https://github.com/stanfordnlp/dspy) and/or [Instructor](https://github.com/jxnl/instructor) further!
-
-### Better Hierarchal Planning
-Related to the first point, a clearer scope would have informed much better hierarchal planning on my part to bind myself to requirements more strictly. From first commit
-`741de71fe28f4d29296e7c48e5cb77e47560b315 Wed May 29 13:30:33 2024 +0800` till deadline, I had 5 days to work on this and in retrospect, I just feel like I hadn't optimised my time for the evaluation per se. In fact, I was optimising for my own learning and exploration because I can guarantee the certainty of this outcome (my own enjoyment) a lot better than a "subjective" evaluation so yea.  Rather than invest my time in building something for an outcome that is uncertain in nature, the reward of gratification from learning is far more certain and indeed, I enjoyed the process tremendously despite the challenges encountered. This is just a bit of meta-reflection that it might not have been the best use of time from a job-seeking perspective.
-
-Still, from a pragmatic point of view, I probably should not have spent as much time on grid search and wrestling with the `Vercel AI SDK` in JavaScript, a Third Language to me, as I did. Again, these are all areas that could have been improved with better understanding of requirements and planning.
 
 ### Better Abstractions and Mental Models
 Obviously, a lot of the challenges and time constraints would be no issues if I could abstract better and work much more effectively. Clearer mental models and design patterns will help in organising and writing code more elegantly though I think it's also important to note that while JavaScript came out 28 years ago, GPT-4 is only about 1 year old. While agile development and DevOps have been around and lessons can be borrowed, I do think that there's an extent to which old lessons don't apply here because deterministic programmes are a different beast to probabilistic programmes with data at its heart. The best way to improve in this area is to connect with a community, share and learn continuously, which is why I enjoy A.I. engineering meet-ups and the LLM fine-tuning course that I'm doing right now. I find it very valuable to learn to A.I. podcasts when running to keep myself informed and updated too.
